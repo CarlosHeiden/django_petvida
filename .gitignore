@@ -1,0 +1,33 @@
+# Ambiente virtual gerenciado pelo Poetry
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Configurações do VS Code
+.vscode/
+
+# Arquivos de log
+*.log
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Pasta de migrações sem arquivos (opcional)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# Arquivos de banco de dados
+db.sqlite3
+
+# Arquivos de cache e compilados
+*.pyc
+*.pyo
+*.pyd
+*.swp
+
+# Arquivos do Poetry (opcional manter .lock)
+poetry.lock

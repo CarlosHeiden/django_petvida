@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .menu-container {
+        max-width: 600px;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: #f4f4f4;
+        border-radius: 10px;
+        box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .menu-container h2 {
+        margin-bottom: 30px;
+        color: #333;
+    }
+
+    .menu-link {
+        display: block;
+        margin: 15px 0;
+        padding: 12px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        transition: background-color 0.3s ease;
+    }
+
+    .menu-link:hover {
+        background-color: #0056b3;
+    }
+</style>
+
+<div class="menu-container">
+    <h2>Menu Principal</h2>
+    <a href="{% url 'cadastrar_cliente' %}" class="menu-link">Cadastrar Cliente</a>
+    <a href="{% url 'cadastrar_animal' %}" class="menu-link">Cadastrar Animal</a>
+    <a href="{% url 'cadastrar_veterinario' %}" class="menu-link">Cadastrar Veterinário</a>
+    <a href="{% url 'cadastrar_vacina' %}" class="menu-link">Cadastrar Vacina</a>
+
+    <a href="{% url 'listar_clientes' %}" class="menu-link">Listar Clientes</a>
+    <a href="{% url 'listar_animais' %}" class="menu-link">Listar Animais</a>
+    <a href="{% url 'listar_veterinarios' %}" class="menu-link">Listar Veterinários</a>
+    <a href="{% url 'listar_vacinas' %}" class="menu-link">Listar Vacinas</a>
+</div>
+{% endblock %}

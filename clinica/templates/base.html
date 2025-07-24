@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>PetVida</title>
+</head>
+<body>
+    <h1>Clínica Veterinária PetVida</h1>
+
+    <nav>
+        <a href="{% url 'menu' %}">🏠 Menu</a> |
+        <a href="{% url 'listar_clientes' %}">👤 Clientes</a> |
+        <a href="{% url 'listar_veterinarios' %}">👨‍⚕️ Veterinários</a> |
+        <a href="{% url 'listar_animais' %}">🐶 Animais</a> |
+        <a href="{% url 'listar_vacinas' %}">💉 Vacinas</a>
+    </nav>
+
+    <hr>
+
+    {% block content %}
+    <!-- Conteúdo específico da página -->
+    {% endblock %}
+</body>
+</html>

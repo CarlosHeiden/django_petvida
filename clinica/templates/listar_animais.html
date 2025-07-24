@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Lista de Animais</h2>
+<br/>
+<form method="get">
+    <input type="text" name="q" placeholder="Buscar por animal ou tutor..." value="{{ request.GET.q }}">
+    <button type="submit">Buscar</button>
+</form>
+
+<br/>
+<br/>
+
+{% if animais %}
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Nome</th>
+        <th>Espécie</th>
+        <th>Raça</th>
+        <th>Tutor</th>
+        <th>Ver Histórico</th>
+    </tr>
+    {% for animal in animais %}
+    <tr>
+        <td>{{ animal.nome }}</td>
+        <td>{{ animal.especie }}</td>
+        <td>{{ animal.raca }}</td>
+        <td>{{ animal.id_cliente }}</td>
+        <td><a href="{% url 'historico_clinico' animal.id %}">Histórico</a></td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Nenhum animal cadastrado.</p>
+{% endif %}
+
+{% endblock %}

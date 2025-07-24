@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Lista de Vacinas</h2>
+<br/>
+<form method="get">
+    <input type="text" name="q" placeholder="Buscar vacina ou tipo..." value="{{ request.GET.q }}">
+    <button type="submit">Buscar</button>
+</form>
+
+<br/>
+<br/>
+
+{% if vacinas %}
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Nome</th>
+        <th>Tipo</th>
+    </tr>
+    {% for vacina in vacinas %}
+    <tr>
+        <td>{{ vacina.nome_vacina }}</td>
+        <td>{{ vacina.tipo_vacina }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Nenhuma vacina cadastrada.</p>
+{% endif %}
+
+{% endblock %}

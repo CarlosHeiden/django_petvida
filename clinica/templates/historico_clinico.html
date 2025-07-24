@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Histórico Clínico de {{ animal.nome }} (Tutor: {{ animal.id_cliente }})</h2>
+
+  <table border="1" cellpadding="6" cellspacing="0">
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Tipo</th>
+        <th>Descrição</th>
+        <th>Veterinário</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for evento in historico %}
+        <tr>
+          <td>{{ evento.data }}</td>
+          <td>{{ evento.tipo }}</td>
+          <td>{{ evento.descricao }}</td>
+          <td>{{ evento.veterinario }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="4">Nenhum registro encontrado.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

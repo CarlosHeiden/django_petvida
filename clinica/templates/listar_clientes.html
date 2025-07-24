@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Lista de Clientes</h2>
+
+<br/>
+<form method="get">
+    <input type="text" name="q" placeholder="Buscar cliente..." value="{{ request.GET.q }}">
+    <button type="submit">Buscar</button>
+</form>
+<br/>
+<br/>
+
+
+{% if clientes %}
+<table border="1" cellpadding="5">
+    <tr>
+        <th>Nome</th>
+        <th>Telefone</th>
+        <th>Email</th>
+        <th>Endereco</th>
+    </tr>
+    {% for cliente in clientes %}
+    <tr>
+        <td>{{ cliente.nome_completo }}</td>
+        <td>{{ cliente.telefone }}</td>
+        <td>{{ cliente.email }}</td>
+        <td>{{ cliente.endereco }}</td>
+    </tr>
+    {% endfor %}
+</table>
+{% else %}
+<p>Nenhum cliente cadastrado.</p>
+{% endif %}
+
+{% endblock %}
