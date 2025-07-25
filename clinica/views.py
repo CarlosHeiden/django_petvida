@@ -96,45 +96,49 @@ def buscar_animal(request):
 
 
 # HISTÓRICO CLÍNICO DE UM ANIMAL
+
 def historico_clinico(request, animal_id):
     animal = get_object_or_404(Animal, pk=animal_id)
+    tutor = animal.id_cliente
 
-    consultas = animal.consulta_set.select_related('id_veterinario').all()
-    vacinas = animal.aplicacaovacina_set.select_related('id_veterinario', 'id_vacina').all()
-    tratamentos = animal.realizacaotratamento_set.select_related('id_veterinario', 'id_tratamento').all()
+    # Consultas
+    consultas = Consulta.objects.filter(id_animal=animal.id).values('data_consulta', 'descricao')
 
+    # Vacinas aplicadas
+    vacinas = AplicacaoVacina.objects.filter(id_animal=animal.id).select_related('id_vacina').values('data_aplicacao', 'id_vacina__nome_vacina')
+
+    # Tratamentos realizados
+    tratamentos = RealizacaoTratamento.objects.filter(id_animal=animal.id).select_related('id_tratamento').values('data_realizacao', 'observacoes', 'id_tratamento__nome_tratamento')
+
+    # Construir histórico unificado
     historico = []
 
-    for c in consultas:
+    for item in consultas:
         historico.append({
-            'data': c.data_consulta,
+            'data': item['data_consulta'],
             'tipo': 'Consulta',
-            'descricao': c.descricao,
-            'veterinario': c.id_veterinario.nome,
+            'descricao': item['descricao']
         })
 
-    for v in vacinas:
+    for item in vacinas:
         historico.append({
-            'data': v.data_aplicacao,
-            'tipo': 'Vacina - ' + v.id_vacina.nome_vacina,
-            'descricao': f"Tipo: {v.id_vacina.tipo_vacina}",
-            'veterinario': v.id_veterinario.nome,
+            'data': item['data_aplicacao'],
+            'tipo': 'Vacina',
+            'descricao': f"Aplicação da vacina: {item['id_vacina__nome_vacina']}"
         })
 
-    for t in tratamentos:
+    for item in tratamentos:
         historico.append({
-            'data': t.data_realizacao,
-            'tipo': 'Tratamento - ' + t.id_tratamento.nome_tratamento,
-            'descricao': t.observacoes,
-            'veterinario': t.id_veterinario.nome,
+            'data': item['data_realizacao'],
+            'tipo': 'Tratamento',
+            'descricao': f"{item['id_tratamento__nome_tratamento']}: {item['observacoes']}"
         })
 
-    # Ordena todos os registros pela data decrescente
+    # Ordenar histórico por data decrescente
     historico.sort(key=lambda x: x['data'], reverse=True)
 
     return render(request, 'historico_clinico.html', {
         'animal': animal,
+        'tutor': tutor,
         'historico': historico
     })
-
-

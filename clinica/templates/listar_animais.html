@@ -4,7 +4,7 @@
 <h2>Lista de Animais</h2>
 <br/>
 <form method="get">
-    <input type="text" name="q" placeholder="Buscar por animal ou tutor..." value="{{ request.GET.q }}">
+    <input type="text" name="q" placeholder="Animal ou tutor" value="{{ request.GET.q }}">
     <button type="submit">Buscar</button>
 </form>
 
@@ -12,24 +12,36 @@
 <br/>
 
 {% if animais %}
-<table border="1" cellpadding="5">
-    <tr>
+  
+  <table class="table table-striped table-bordered table-hover">
+    <thead class="table-dark">
+      <tr>
         <th>Nome</th>
         <th>Espécie</th>
         <th>Raça</th>
+        <th>Data de Nascimento</th>
         <th>Tutor</th>
-        <th>Ver Histórico</th>
-    </tr>
-    {% for animal in animais %}
-    <tr>
+        <th>Historico</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for animal in animais %}
+      <tr>
         <td>{{ animal.nome }}</td>
         <td>{{ animal.especie }}</td>
         <td>{{ animal.raca }}</td>
-        <td>{{ animal.id_cliente }}</td>
-        <td><a href="{% url 'historico_clinico' animal.id %}">Histórico</a></td>
-    </tr>
-    {% endfor %}
-</table>
+        <td>{{ animal.data_nascimento }}</td>
+        <td>{{ animal.id_cliente.nome_completo }}</td>
+        <td>
+          <a href="{% url 'historico_clinico' animal.id %}" class="text-decoration-none fw-bold">
+            Historico_clinico
+          </a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
 {% else %}
 <p>Nenhum animal cadastrado.</p>
 {% endif %}
