@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect,  get_object_or_404
 from .models import Cliente, Animal, Veterinario
-from .forms import ClienteForm, AnimalForm, VeterinarioForm, VacinaForm
+from .forms import ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
 from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario
 from django.db.models import Q 
 
@@ -141,4 +141,62 @@ def historico_clinico(request, animal_id):
         'animal': animal,
         'tutor': tutor,
         'historico': historico
+    })
+
+
+
+# CONSULTAS
+def cadastrar_consulta(request):
+    if request.method == 'POST':
+        form = ConsultaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('menu')
+    else:
+        form = ConsultaForm()
+    return render(request, 'formulario.html', {
+        'form': form,
+        'titulo': 'Cadastrar Consulta'
+    })
+
+# APLICAÇÃO DE VACINAS
+def cadastrar_aplicacao_vacina(request):
+    if request.method == 'POST':
+        form = AplicacaoVacinaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('menu')
+    else:
+        form = AplicacaoVacinaForm()
+    return render(request, 'formulario.html', {
+        'form': form,
+        'titulo': 'Aplicar Vacina'
+    })
+
+# AGENDAMENTO
+def cadastrar_agendamento(request):
+    if request.method == 'POST':
+        form = AgendamentoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('menu')
+    else:
+        form = AgendamentoForm()
+    return render(request, 'formulario.html', {
+        'form': form,
+        'titulo': 'Agendar Atendimento'
+    })
+
+# REALIZAÇÃO DE TRATAMENTO
+def cadastrar_tratamento_realizado(request):
+    if request.method == 'POST':
+        form = RealizacaoTratamentoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('menu')
+    else:
+        form = RealizacaoTratamentoForm()
+    return render(request, 'formulario.html', {
+        'form': form,
+        'titulo': 'Registrar Tratamento Realizado'
     })

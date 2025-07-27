@@ -3,46 +3,76 @@
 {% block content %}
 <style>
     .menu-container {
-        max-width: 600px;
-        margin: 40px auto;
-        padding: 30px;
-        background-color: #f4f4f4;
-        border-radius: 10px;
-        box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .menu-title {
         text-align: center;
-    }
-
-    .menu-container h2 {
         margin-bottom: 30px;
-        color: #333;
     }
-
-    .menu-link {
-        display: block;
-        margin: 15px 0;
-        padding: 12px;
-        background-color: #007bff;
-        color: white;
-        text-decoration: none;
-        border-radius: 6px;
-        transition: background-color 0.3s ease;
+    .menu-item {
+        margin-bottom: 10px;
+        font-weight: 500;
+        transition: background 0.2s ease-in-out;
     }
-
-    .menu-link:hover {
-        background-color: #0056b3;
+    .menu-item:hover {
+        background-color: #e9ecef;
+    }
+    .menu-icon {
+        margin-right: 8px;
     }
 </style>
 
-<div class="menu-container">
-    <h2>Menu Principal</h2>
-    <a href="{% url 'cadastrar_cliente' %}" class="menu-link">Cadastrar Cliente</a>
-    <a href="{% url 'cadastrar_animal' %}" class="menu-link">Cadastrar Animal</a>
-    <a href="{% url 'cadastrar_veterinario' %}" class="menu-link">Cadastrar Veterinário</a>
-    <a href="{% url 'cadastrar_vacina' %}" class="menu-link">Cadastrar Vacina</a>
+<div class="container menu-container mt-5">
+    <h2 class="menu-title">Menu Principal</h2>
+    <div class="row">
+        <!-- Coluna 1 -->
+        <div class="col-md-6">
+            <div class="list-group">
+                <a href="{% url 'cadastrar_cliente' %}" class="list-group-item list-group-item-action menu-item">
+                    👤 Cadastrar Cliente
+                </a>
+                <a href="{% url 'cadastrar_animal' %}" class="list-group-item list-group-item-action menu-item">
+                    🐾 Cadastrar Animal
+                </a>
+                <a href="{% url 'cadastrar_veterinario' %}" class="list-group-item list-group-item-action menu-item">
+                    🩺 Cadastrar Veterinário
+                </a>
+                <a href="{% url 'cadastrar_vacina' %}" class="list-group-item list-group-item-action menu-item">
+                    💉 Cadastrar Vacina
+                </a>
+                <a href="{% url 'cadastrar_consulta' %}" class="list-group-item list-group-item-action menu-item">
+                    📅 Cadastrar Consulta
+                </a>
+                <a href="{% url 'cadastrar_agendamento' %}" class="list-group-item list-group-item-action menu-item">
+                    ⏰ Agendar Atendimento
+                </a>
+            </div>
+        </div>
 
-    <a href="{% url 'listar_clientes' %}" class="menu-link">Listar Clientes</a>
-    <a href="{% url 'listar_animais' %}" class="menu-link">Listar Animais</a>
-    <a href="{% url 'listar_veterinarios' %}" class="menu-link">Listar Veterinários</a>
-    <a href="{% url 'listar_vacinas' %}" class="menu-link">Listar Vacinas</a>
+        <!-- Coluna 2 -->
+        <div class="col-md-6">
+            <div class="list-group">
+                <a href="{% url 'cadastrar_aplicacao_vacina' %}" class="list-group-item list-group-item-action menu-item">
+                    🐶 Aplicar Vacina
+                </a>
+                <a href="{% url 'cadastrar_tratamento_realizado' %}" class="list-group-item list-group-item-action menu-item">
+                    💊 Registrar Tratamento
+                </a>
+                <a href="{% url 'listar_clientes' %}" class="list-group-item list-group-item-action menu-item">
+                    📋 Listar Clientes
+                </a>
+                <a href="{% url 'listar_animais' %}" class="list-group-item list-group-item-action menu-item">
+                    🐕 Listar Animais
+                </a>
+                <a href="{% url 'listar_veterinarios' %}" class="list-group-item list-group-item-action menu-item">
+                    👨‍⚕️ Listar Veterinários
+                </a>
+                <a href="{% url 'listar_vacinas' %}" class="list-group-item list-group-item-action menu-item">
+                    💉 Listar Vacinas
+                </a>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}
