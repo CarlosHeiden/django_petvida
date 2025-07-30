@@ -1,5 +1,18 @@
 {% extends 'base.html' %}
 {% block content %}
+<style>
+  .btn-salvar {
+    background-color: #03bb85;
+    border-color: #03bb85;
+    color: #ffffff; /* texto branco para contraste */
+  }
+
+  .btn-salvar:hover {
+    background-color: #029c71;
+    border-color: #029c71;
+  }
+</style>
+
 <div class="container mt-4">
     <h2>{{ titulo }}</h2>
     <form method="post" novalidate>
@@ -13,7 +26,7 @@
                 {% endif %}
             </div>
         {% endfor %}
-        <button type="submit" class="btn btn-primary">Salvar</button>
+        <button type="submit" class="btn btn-salvar">Salvar</button>
         <a href="{% url 'menu' %}" class="btn btn-secondary">Cancelar</a>
     </form>
 </div>
