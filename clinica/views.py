@@ -200,3 +200,37 @@ def cadastrar_tratamento_realizado(request):
         'form': form,
         'titulo': 'Registrar Tratamento Realizado'
     })
+
+# EDIÇÃO E EXCLUSÃO DE CLIENTES
+def editar_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            return redirect('listar_clientes')
+    else:
+        form = ClienteForm(instance=cliente)
+
+    return render(request, 'formulario_edicao.html', {
+        'form': form,
+        'titulo': 'Editar Cliente',
+        'botao': 'Salvar Alterações',
+        'voltar_url': 'listar_clientes'
+    })
+
+
+
+def excluir_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+
+    if request.method == 'POST':
+        cliente.delete()
+        return redirect('listar_clientes')
+
+    return render(request, 'confirmar_exclusao.html', {
+        'objeto': cliente,
+        'tipo': 'Cliente',
+        'voltar_url': 'listar_clientes'
+    })
