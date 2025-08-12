@@ -22,4 +22,6 @@ urlpatterns = [
     path('clientes/editar/<int:pk>/', views.editar_cliente, name='editar_cliente'),
     path('clientes/excluir/<int:pk>/', views.excluir_cliente, name='excluir_cliente'),
 
+    path('register/', views.register, name='register'),
+
 ]

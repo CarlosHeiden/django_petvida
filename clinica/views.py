@@ -1,12 +1,26 @@
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect,  get_object_or_404
-from .models import Cliente, Animal, Veterinario
-from .forms import ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
-from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario
 from django.db.models import Q 
+from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario
+from .forms import CadastroForm, ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
 
+def register(request):
+    if request.method == 'POST':
+        form = CadastroForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login') # Redireciona para a página de login após o cadastro
+    else:
+        form = CadastroForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+
+@login_required
 def menu(request):
     return render(request, 'menu.html')
 
+@login_required
 def cadastrar_cliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -17,6 +31,7 @@ def cadastrar_cliente(request):
         form = ClienteForm()
     return render(request, 'formulario.html', {'form': form, 'titulo': 'Cadastrar Cliente'})
 
+@login_required
 def cadastrar_animal(request):
     if request.method == 'POST':
         form = AnimalForm(request.POST)
@@ -27,6 +42,7 @@ def cadastrar_animal(request):
         form = AnimalForm()
     return render(request, 'formulario.html', {'form': form, 'titulo': 'Cadastrar Animal'})
 
+@login_required
 def cadastrar_veterinario(request):
     if request.method == 'POST':
         form = VeterinarioForm(request.POST)
@@ -37,6 +53,7 @@ def cadastrar_veterinario(request):
         form = VeterinarioForm()
     return render(request, 'formulario.html', {'form': form, 'titulo': 'Cadastrar Veterinário'})
 
+@login_required
 def cadastrar_vacina(request):
     if request.method == 'POST':
         form = VacinaForm(request.POST)
@@ -96,7 +113,7 @@ def buscar_animal(request):
 
 
 # HISTÓRICO CLÍNICO DE UM ANIMAL
-
+@login_required
 def historico_clinico(request, animal_id):
     animal = get_object_or_404(Animal, pk=animal_id)
     tutor = animal.id_cliente
@@ -146,6 +163,7 @@ def historico_clinico(request, animal_id):
 
 
 # CONSULTAS
+@login_required
 def cadastrar_consulta(request):
     if request.method == 'POST':
         form = ConsultaForm(request.POST)
@@ -160,6 +178,7 @@ def cadastrar_consulta(request):
     })
 
 # APLICAÇÃO DE VACINAS
+@login_required
 def cadastrar_aplicacao_vacina(request):
     if request.method == 'POST':
         form = AplicacaoVacinaForm(request.POST)
@@ -174,6 +193,7 @@ def cadastrar_aplicacao_vacina(request):
     })
 
 # AGENDAMENTO
+@login_required
 def cadastrar_agendamento(request):
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
@@ -188,6 +208,7 @@ def cadastrar_agendamento(request):
     })
 
 # REALIZAÇÃO DE TRATAMENTO
+@login_required
 def cadastrar_tratamento_realizado(request):
     if request.method == 'POST':
         form = RealizacaoTratamentoForm(request.POST)
@@ -202,6 +223,7 @@ def cadastrar_tratamento_realizado(request):
     })
 
 # EDIÇÃO E EXCLUSÃO DE CLIENTES
+@login_required
 def editar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
 
@@ -221,7 +243,7 @@ def editar_cliente(request, pk):
     })
 
 
-
+@login_required
 def excluir_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
 
@@ -234,3 +256,8 @@ def excluir_cliente(request, pk):
         'tipo': 'Cliente',
         'voltar_url': 'listar_clientes'
     })
+
+@login_required
+def custom_logout(request):
+    logout(request)
+    return render(request, 'registration/logged_out.html')

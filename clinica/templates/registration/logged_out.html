@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 text-center">
+        <h2 class="mb-4">Você foi desconectado com sucesso!</h2>
+        <p>Obrigado por utilizar o sistema.</p>
+        <a href="{% url 'login' %}" class="btn btn-primary mt-3">Fazer login novamente</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

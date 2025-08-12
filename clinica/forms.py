@@ -1,9 +1,13 @@
 from django import forms
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm
 from .models import (
     Cliente, Animal, Veterinario, Vacina,
     Consulta, AplicacaoVacina, Tratamento,
     RealizacaoTratamento, Agendamento
 )
+
+
 
 class ClienteForm(forms.ModelForm):
     class Meta:
@@ -107,4 +111,29 @@ class AgendamentoForm(forms.ModelForm):
             'hora_agendamento': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'tipo_servico': forms.TextInput(attrs={'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+# Crie um novo formulário de registro
+class CadastroForm(UserCreationForm):
+    # Campos que você quer adicionar no formulário de registro
+    # O UserCreationForm já tem 'username' e 'password'
+    
+    # Adicionando um campo de email
+    email = forms.EmailField(
+        label='Email',
+        required=True,
+        widget=forms.EmailInput(attrs={'class': 'form-control'})
+    )
+    
+    class Meta:
+        model = User
+        fields = ('username', 'email') # Apenas os campos que queremos mostrar
+        labels = {
+            'username': 'Nome de Usuário',
+            'password': 'Senha',
+            'email': 'Email',
+        }
+        widgets = {
+            'username': forms.TextInput(attrs={'class': 'form-control'}),
+            'password': forms.PasswordInput(attrs={'class': 'form-control'}),
         }
