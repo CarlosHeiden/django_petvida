@@ -31,3 +31,6 @@ db.sqlite3
 
 # Arquivos do Poetry (opcional manter .lock)
 poetry.lock
+
+# arquivo texto
+.codigos.text

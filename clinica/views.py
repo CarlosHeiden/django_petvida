@@ -1,9 +1,12 @@
+from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect,  get_object_or_404
 from django.db.models import Q 
-from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario
+from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario, Agendamento
 from .forms import CadastroForm, ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
+from datetime import datetime, timedelta, time
+
 
 def register(request):
     if request.method == 'POST':
@@ -15,6 +18,10 @@ def register(request):
         form = CadastroForm()
     return render(request, 'registration/register.html', {'form': form})
 
+
+def pagina_inicial(request):
+    """View para a página inicial institucional."""
+    return render(request, 'index.html')
 
 @login_required
 def menu(request):
@@ -193,21 +200,151 @@ def cadastrar_aplicacao_vacina(request):
     })
 
 # AGENDAMENTO
+
+def encontrar_proximo_horario_disponivel(data, duracao, agendamentos_existentes):
+    """Encontra o próximo horário disponível no dia para um determinado serviço."""
+    
+    horario_inicio_dia = time(8, 0) # 8:00 AM
+    horario_fim_dia = time(18, 0)  # 6:00 PM
+    incremento_minutos = 15
+    
+    DURACAO_SERVICOS = {
+        'Banho': 60,
+        'Tosa': 60,
+        'Banho e Tosa': 120,
+    }
+    
+    intervalos_ocupados = []
+    horario_fim_ultimo = datetime.combine(data, horario_inicio_dia)
+
+    for agendamento in agendamentos_existentes:
+        inicio = datetime.combine(data, agendamento.hora_agendamento)
+        duracao_existente = DURACAO_SERVICOS.get(agendamento.tipo_servico, 60)
+        fim = inicio + timedelta(minutes=duracao_existente)
+        intervalos_ocupados.append({'inicio': inicio, 'fim': fim})
+        
+        if fim > horario_fim_ultimo:
+            horario_fim_ultimo = fim
+
+    # CORREÇÃO: Inicia a busca a partir do fim do último agendamento
+    horario_atual = horario_fim_ultimo
+    
+    # Arredonda o horário de início da busca para o próximo incremento
+    minuto_atual = horario_atual.minute
+    minutos_para_proximo_incremento = (incremento_minutos - (minuto_atual % incremento_minutos)) % incremento_minutos
+    horario_atual += timedelta(minutes=minutos_para_proximo_incremento)
+
+    while horario_atual.time() < horario_fim_dia:
+        horario_fim_novo = horario_atual + timedelta(minutes=duracao)
+        
+        if horario_fim_novo.time() > horario_fim_dia:
+            break
+
+        conflito = False
+        for intervalo in intervalos_ocupados:
+            if not (horario_fim_novo <= intervalo['inicio'] or horario_atual >= intervalo['fim']):
+                conflito = True
+                break
+        
+        if not conflito:
+            return horario_atual.time()
+            
+        horario_atual += timedelta(minutes=incremento_minutos)
+        
+    return None
+
 @login_required
 def cadastrar_agendamento(request):
+    DURACAO_SERVICOS = {
+        'Banho': 60,
+        'Tosa': 60,
+        'Banho e Tosa': 120,
+    }
+    servicos_sem_vet = list(DURACAO_SERVICOS.keys())
+
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('menu')
+            tipo_servico = form.cleaned_data['tipo_servico']
+            data = form.cleaned_data['data_agendamento']
+            hora = form.cleaned_data['hora_agendamento']
+            veterinario = form.cleaned_data.get('id_veterinario')
+
+            conflito_encontrado = False
+
+            if tipo_servico in servicos_sem_vet:
+                # DEBUG: Imprime o tipo de serviço e data que estamos processando
+                print(f"\n--- DEPURAÇÃO DE AGENDAMENTO SEM VET ---")
+                print(f"Tentando agendar '{tipo_servico}' para a data: {data}")
+
+                agendamentos_existentes = Agendamento.objects.filter(
+                    data_agendamento=data,
+                    tipo_servico__in=servicos_sem_vet
+                ).order_by('hora_agendamento') # Ordena para facilitar a leitura
+                
+                # DEBUG: Mostra a lista de agendamentos existentes encontrados
+                print(f"Agendamentos existentes encontrados: {agendamentos_existentes.count()}")
+                for agendamento in agendamentos_existentes:
+                    print(f"-> Horário existente: {agendamento.hora_agendamento}, Tipo: {agendamento.tipo_servico}")
+
+                duracao = DURACAO_SERVICOS.get(tipo_servico, 60)
+                horario_inicio_novo = datetime.combine(data, hora)
+                horario_fim_novo = horario_inicio_novo + timedelta(minutes=duracao)
+
+                conflitos_encontrados = []
+                for agendamento_existente in agendamentos_existentes:
+                    horario_inicio_existente = datetime.combine(agendamento_existente.data_agendamento, agendamento_existente.hora_agendamento)
+                    duracao_existente = DURACAO_SERVICOS.get(agendamento_existente.tipo_servico, 60)
+                    horario_fim_existente = horario_inicio_existente + timedelta(minutes=duracao_existente)
+                    
+                    # Verifica a sobreposição
+                    if not (horario_fim_novo <= horario_inicio_existente or horario_inicio_novo >= horario_fim_existente):
+                        conflitos_encontrados.append(agendamento_existente)
+                
+                if conflitos_encontrados:
+                    # DEBUG: Encontrou conflito. Mostra a lógica para encontrar o próximo horário.
+                    print("Conflito encontrado. Buscando próximo horário disponível...")
+                    proximo_horario = encontrar_proximo_horario_disponivel(data, duracao, agendamentos_existentes)
+                    
+                    if proximo_horario:
+                        mensagem_erro = f'Já existe um agendamento que se sobrepõe a este horário. O próximo horário disponível é às **{proximo_horario.strftime("%H:%M")}**.'
+                    else:
+                        mensagem_erro = 'Não há horários disponíveis para este serviço neste dia.'
+                    
+                    messages.error(request, mensagem_erro)
+                    conflito_encontrado = True
+                else:
+                    form.instance.id_veterinario = None
+            else:
+                # Lógica para agendamentos com veterinário permanece a mesma
+                agendamentos_conflitantes = Agendamento.objects.filter(
+                    data_agendamento=data,
+                    hora_agendamento=hora,
+                    id_veterinario=veterinario
+                )
+                
+                if agendamentos_conflitantes.exists():
+                    messages.error(request, 'Este horário já está agendado para o veterinário selecionado.')
+                    conflito_encontrado = True
+
+            if not conflito_encontrado:
+                form.save()
+                messages.success(request, 'Serviço agendado com sucesso!')
+                return redirect('cadastrar_agendamento')
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"Erro no campo '{field}': {error}")
+            
     else:
         form = AgendamentoForm()
+    
     return render(request, 'formulario.html', {
         'form': form,
-        'titulo': 'Agendar Atendimento'
+        'titulo': 'Agendar Serviços'
     })
 
-# REALIZAÇÃO DE TRATAMENTO
+
 @login_required
 def cadastrar_tratamento_realizado(request):
     if request.method == 'POST':
