@@ -489,6 +489,7 @@ def agendamentos_do_dia(request):
         token, created = Token.objects.get_or_create(user=request.user)
     
     context = {
+        'hoje': hoje,
         'agendamentos': agendamentos,
         'token': token.key if token else None, # Adiciona a chave do token ao contexto
     }
