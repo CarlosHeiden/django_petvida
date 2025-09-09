@@ -6,9 +6,10 @@ authors = ["Heiden <119899341+CarlosHeiden@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = ">=3.10.1,<3.11"
 django = "^5.2.4"
 mysqlclient = "^2.2.7"
+djangorestframework = "^3.16.1"
 
 
 [build-system]

@@ -3,9 +3,22 @@ from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect,  get_object_or_404
 from django.db.models import Q 
-from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario, Agendamento
+from django.http import JsonResponse
+from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, AplicacaoVacina, RealizacaoTratamento, Veterinario, Agendamento, Servicos
 from .forms import CadastroForm, ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
-from datetime import datetime, timedelta, time
+from datetime import datetime, timedelta, time, date
+
+from .serializers import AgendamentoSerializer, AnimalSerializer, ServicosSerializer
+from rest_framework.decorators import api_view
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+
+
 
 
 def register(request):
@@ -265,10 +278,10 @@ def cadastrar_agendamento(request):
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
         if form.is_valid():
-            tipo_servico = form.cleaned_data['tipo_servico']
+            servicos = form.cleaned_data['id_servicos']
             data = form.cleaned_data['data_agendamento']
             hora = form.cleaned_data['hora_agendamento']
-            veterinario = form.cleaned_data.get('id_veterinario')
+            
 
             conflito_encontrado = False
 
@@ -398,3 +411,116 @@ def excluir_cliente(request, pk):
 def custom_logout(request):
     logout(request)
     return render(request, 'registration/logged_out.html')
+
+class CustomAuthToken(ObtainAuthToken):
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+        
+        try:
+            # 1. Obtenha a instância do Cliente a partir do objeto User
+            # O nome do campo no seu models.py que liga ao User
+            # é o que você precisa usar aqui (o seu é 'user')
+            cliente_instance = Cliente.objects.get(user=user)
+            
+            # 2. Use a instância do Cliente para filtrar os animais
+            # O nome do campo no seu models.py que liga ao Cliente
+            # é o que você precisa usar aqui (o seu é 'id_cliente')
+            animais = Animal.objects.filter(id_cliente=cliente_instance)
+            
+            # Serializar os dados dos animais
+            animais_data = AnimalSerializer(animais, many=True).data
+            
+            return Response({
+                'token': token.key,
+                'user_id': user.pk,
+                'email': user.email,
+                'animais': animais_data
+            }, status=status.HTTP_200_OK)
+
+        except Cliente.DoesNotExist:
+            return Response(
+                {'error': 'Instância de Cliente não encontrada para este usuário.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+# ViewSet para Agendamentos (protegida com autenticação)
+class AgendamentoViewSet(viewsets.ModelViewSet):
+    queryset = Agendamento.objects.all().order_by('-data_agendamento', '-hora_agendamento')
+    serializer_class = AgendamentoSerializer
+    permission_classes = [IsAuthenticated]
+
+# ViewSet para listar Animais (para o dropdown do Flutter)
+class AnimalViewSet(viewsets.ModelViewSet):
+    queryset = Animal.objects.all().order_by('nome')
+    serializer_class = AnimalSerializer
+    permission_classes = [IsAuthenticated]
+
+# ViewSet para listar Servicos (para o dropdown do Flutter)
+class ServicosViewSet(viewsets.ModelViewSet):
+    queryset = Servicos.objects.all().order_by('nome_servico')
+    serializer_class = ServicosSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class AgendamentosDoDia(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Obtém a data de hoje
+        hoje = datetime.now().date()
+        
+        # Filtra os agendamentos pela data de hoje e ordena por hora
+        agendamentos = Agendamento.objects.filter(data_agendamento=hoje).order_by('hora_agendamento')
+
+        # Serializa os dados
+        serializer = AgendamentoSerializer(agendamentos, many=True)
+        
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+def agendamentos_do_dia(request):
+    hoje = datetime.now().date()
+    agendamentos = Agendamento.objects.filter(data_agendamento=hoje).order_by('hora_agendamento')
+    
+    # Obtém o token do usuário logado
+    token = None
+    if request.user.is_authenticated:
+        token, created = Token.objects.get_or_create(user=request.user)
+    
+    context = {
+        'agendamentos': agendamentos,
+        'token': token.key if token else None, # Adiciona a chave do token ao contexto
+    }
+    return render(request, 'agendamentos_do_dia.html', context)
+
+
+def get_agendamentos_json(request):
+    """
+    Retorna os agendamentos do dia em formato JSON para o JavaScript.
+    Não exige autenticação de token.
+    """
+    hoje = date.today()
+    agendamentos = Agendamento.objects.filter(data_agendamento=hoje).order_by('hora_agendamento')
+    serializer = AgendamentoSerializer(agendamentos, many=True)
+    return JsonResponse(serializer.data, safe=False)
+
+@api_view(['POST'])
+def finalizar_servico(request, pk):
+    agendamento = get_object_or_404(Agendamento, pk=pk)
+    
+    # Atualiza o status do agendamento no banco de dados
+    agendamento.status = 'finalizado'
+    agendamento.save()
+
+    # Lógica para enviar a mensagem (exemplo simples)
+    # Você pode integrar com uma API de SMS ou WhatsApp aqui
+    mensagem_cliente = f"Olá, {agendamento.id_animal.id_cliente.nome_completo}! O serviço de {agendamento.id_servicos.nome_servico} para o seu pet {agendamento.id_animal.nome} foi finalizado. 😊"
+    print("MENSAGEM PARA O CLIENTE:", mensagem_cliente) # Exemplo: apenas imprime no console
+
+    serializer = AgendamentoSerializer(agendamento)
+    return Response(serializer.data)
+
+
+
+

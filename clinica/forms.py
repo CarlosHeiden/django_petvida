@@ -108,26 +108,12 @@ OPCOES_SERVICO = [
 ]
 
 class AgendamentoForm(forms.ModelForm):
-    tipo_servico = forms.ChoiceField(
-        choices=OPCOES_SERVICO,
-        label="Tipo de serviço",
-        widget=forms.Select(attrs={'class': 'form-control', 'id': 'id_tipo_servico'})
-    )
-    
-    # Faz com que o campo id_veterinario não seja obrigatório no formulário
-    # Isso alinha o formulário com o model que já permite valores nulos (null=True)
-    id_veterinario = forms.ModelChoiceField(
-        queryset=Agendamento._meta.get_field('id_veterinario').related_model.objects.all(),
-        required=False,
-        label="Veterinário",
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
-
     class Meta:
         model = Agendamento
-        fields = ['id_animal', 'id_veterinario', 'data_agendamento', 'hora_agendamento', 'tipo_servico', 'observacoes']
+        fields = ['id_animal', 'id_servicos', 'data_agendamento', 'hora_agendamento', 'observacoes']
         widgets = {
             'id_animal': forms.Select(attrs={'class': 'form-control'}),
+            'id_servicos': forms.Select(attrs={'class': 'form-control'}),
             'data_agendamento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'hora_agendamento': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control'}),

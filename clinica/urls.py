@@ -1,7 +1,9 @@
 from django.urls import path
 from . import views
 
+
 urlpatterns = [
+
     path('', views.pagina_inicial, name='pagina_inicial'),
     
     path('clinica/menu', views.menu, name='menu'),
@@ -20,6 +22,8 @@ urlpatterns = [
     path('vacinas/', views.listar_vacinas, name='listar_vacinas'),
     path('historico/<int:animal_id>/', views.historico_clinico, name='historico_clinico'),
     path('buscar-animal/', views.buscar_animal, name='buscar_animal'),
+
+    path('agendamentos-do-dia/', views.agendamentos_do_dia, name='agendamentos_do_dia'),
 
     path('clientes/editar/<int:pk>/', views.editar_cliente, name='editar_cliente'),
     path('clientes/excluir/<int:pk>/', views.excluir_cliente, name='excluir_cliente'),

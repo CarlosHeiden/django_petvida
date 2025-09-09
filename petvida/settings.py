@@ -29,6 +29,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework.authtoken',
     'clinica',
 ]
 
@@ -70,7 +72,7 @@ WSGI_APPLICATION = 'petvida.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'petvida02',
+        'NAME': 'petvida03',
         'USER': 'carlos',
         'PASSWORD': 'Ktmsx-350f',
         'HOST': 'localhost',  # ou IP se for remoto
@@ -129,3 +131,14 @@ LOGIN_REDIRECT_URL = 'menu'
 
 # Adicione esta linha para redirecionar o usuário para a página de login principal
 LOGOUT_REDIRECT_URL = 'login'
+
+# settings.py
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}

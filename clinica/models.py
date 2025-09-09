@@ -1,6 +1,9 @@
 from django.db import models
+from django.contrib.auth.models import User
 
+# Adicione o OneToOneField para ligar o Cliente ao User do Django
 class Cliente(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Usuário")
     nome_completo = models.CharField("Nome completo", max_length=100)
     cpf = models.CharField("CPF", max_length=14, unique=True)
     telefone = models.CharField("Telefone", max_length=20)
@@ -59,7 +62,7 @@ class AplicacaoVacina(models.Model):
 
 class Tratamento(models.Model):
     nome_tratamento = models.CharField("Nome do tratamento", max_length=100)
-    tipo_tratamento  = models.CharField("Tipo de Tratamento", max_length=50 , default="teste")
+    tipo_tratamento = models.CharField("Tipo de Tratamento", max_length=50 , default="teste")
     descricao = models.TextField("Descrição")
 
     def __str__(self):
@@ -75,13 +78,22 @@ class RealizacaoTratamento(models.Model):
     def __str__(self):
         return f"{self.id_tratamento.nome_tratamento} - {self.id_animal.nome} em {self.data_realizacao}"
 
+class Servicos(models.Model):
+    nome_servico = models.CharField("Nome do serviço", max_length=100)
+    
+    def __str__(self):
+        return self.nome_servico
+
 class Agendamento(models.Model):
     id_animal = models.ForeignKey(Animal, on_delete=models.CASCADE, verbose_name="Animal")
-    id_veterinario = models.ForeignKey(Veterinario, on_delete=models.SET_NULL, null=True, verbose_name="Veterinário")
+    id_servicos = models.ForeignKey(Servicos, on_delete=models.SET_NULL, null=True, verbose_name="Serviço")
     data_agendamento = models.DateField("Data")
     hora_agendamento = models.TimeField("Hora")
-    tipo_servico = models.CharField("Tipo de serviço", max_length=100)
     observacoes = models.TextField("Observações", blank=True, null=True)
+    status = models.CharField(max_length=20, default='pendente') # Novo campo de status
 
+    # Corrigido o __str__ para usar o nome do serviço
     def __str__(self):
-        return f"{self.tipo_servico} - {self.id_animal.nome} em {self.data_agendamento}"
+        # Proteção contra id_servicos ser nulo
+        servico_nome = self.id_servicos.nome_servico if self.id_servicos else "Serviço não especificado"
+        return f"{servico_nome} - {self.id_animal.nome} em {self.data_agendamento}"
