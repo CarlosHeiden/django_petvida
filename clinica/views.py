@@ -447,9 +447,23 @@ class CustomAuthToken(ObtainAuthToken):
             )
 # ViewSet para Agendamentos (protegida com autenticação)
 class AgendamentoViewSet(viewsets.ModelViewSet):
-    queryset = Agendamento.objects.all().order_by('-data_agendamento', '-hora_agendamento')
+   # queryset = Agendamento.objects.all().order_by('-data_agendamento', '-hora_agendamento')
     serializer_class = AgendamentoSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        ## Filtra os agendamentos para retornar apenas os do cliente autenticado
+        #queryset = Agendamento.objects.all().order_by('-data_agendamento', '-hora_agendamento')
+        user = self.request.user
+        if  not user.is_authenticated:
+            return Agendamento.objects.none()  # Retorna um queryset vazio se o usuário não estiver autenticado
+        
+        try:
+            cliente = Cliente.objects.get(user=user)
+            return Agendamento.objects.filter(id_animal__id_cliente=cliente).order_by('-data_agendamento', '-hora_agendamento')
+        except Cliente.DoesNotExist:
+            return Agendamento.objects.none()  # Retorna um queryset vazio se o cliente não for encontrado
+        
 
 # ViewSet para listar Animais (para o dropdown do Flutter)
 class AnimalViewSet(viewsets.ModelViewSet):
