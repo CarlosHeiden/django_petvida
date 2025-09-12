@@ -22,8 +22,11 @@ urlpatterns = [
     path('vacinas/', views.listar_vacinas, name='listar_vacinas'),
     path('historico/<int:animal_id>/', views.historico_clinico, name='historico_clinico'),
     path('buscar-animal/', views.buscar_animal, name='buscar_animal'),
-
+    # Rota para a tela de agendamentos do dia para visualizacao do funcionario que fara os servicos
     path('agendamentos-do-dia/', views.agendamentos_do_dia, name='agendamentos_do_dia'),
+    # Rota para a nova tela de listagem com calendário
+    path('listar-agendamentos/', views.listar_agendamentos, name='listar_agendamentos'),
+
 
     path('clientes/editar/<int:pk>/', views.editar_cliente, name='editar_cliente'),
     path('clientes/excluir/<int:pk>/', views.excluir_cliente, name='excluir_cliente'),

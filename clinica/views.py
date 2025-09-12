@@ -538,4 +538,30 @@ def finalizar_servico(request, pk):
 
 
 
+# A nova view para a tela com o calendário
+def listar_agendamentos(request):
+    # Pega a data da URL. Se não existir, usa a data de hoje.
+    data_str = request.GET.get('data')
+    
+    if data_str:
+        try:
+            data_selecionada = datetime.strptime(data_str, '%Y-%m-%d').date()
+        except ValueError:
+            # Em caso de formato inválido, volta para a data de hoje
+            data_selecionada = date.today()
+    else:
+        # Se nenhuma data foi passada, usa a data de hoje
+        data_selecionada = date.today()
+        
+    agendamentos = Agendamento.objects.filter(data_agendamento=data_selecionada)
+    
+    context = {
+        'agendamentos': agendamentos,
+        'data_selecionada': data_selecionada,
+    }
+    return render(request, 'listar_agendamentos.html', context)
+
+
+
+
 

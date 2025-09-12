@@ -26,7 +26,6 @@
 <div class="container menu-container mt-5">
     <h2 class="menu-title">Menu Principal</h2>
     <div class="row">
-        <!-- Coluna 1 -->
         <div class="col-md-6">
             <div class="list-group">
                 <a href="{% url 'cadastrar_cliente' %}" class="list-group-item list-group-item-action menu-item">
@@ -47,10 +46,15 @@
                 <a href="{% url 'cadastrar_agendamento' %}" class="list-group-item list-group-item-action menu-item">
                     ⏰ Agendar Serviços (Banho, Tosa)
                 </a>
+                <a href="{% url 'listar_agendamentos' %}" class="list-group-item list-group-item-action menu-item">
+                    📅 Visualizar Agendamentos
+                </a>
+                <a href="{% url 'agendamentos_do_dia' %}" class="list-group-item list-group-item-action menu-item">
+                    ✅ Agendamentos do Dia
+                </a>
             </div>
         </div>
 
-        <!-- Coluna 2 -->
         <div class="col-md-6">
             <div class="list-group">
                 <a href="{% url 'cadastrar_aplicacao_vacina' %}" class="list-group-item list-group-item-action menu-item">
@@ -71,6 +75,7 @@
                 <a href="{% url 'listar_vacinas' %}" class="list-group-item list-group-item-action menu-item">
                     💉 Listar Vacinas
                 </a>
+                
             </div>
         </div>
     </div>
