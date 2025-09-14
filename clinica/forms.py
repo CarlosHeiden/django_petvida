@@ -6,6 +6,7 @@ from .models import (
     Consulta, AplicacaoVacina, Tratamento,
     RealizacaoTratamento, Agendamento
 )
+from datetime import datetime, timedelta
 
 
 
@@ -118,6 +119,37 @@ class AgendamentoForm(forms.ModelForm):
             'hora_agendamento': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control'}),
         }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        data = cleaned_data.get('data_agendamento')
+        hora = cleaned_data.get('hora_agendamento')
+        servico = cleaned_data.get('id_servicos')
+        
+        # Só valida se todos os campos necessários estão preenchidos
+        if data and hora and servico:
+            # Pega a duração do serviço do modelo
+            duracao = servico.duracao_minutos
+            
+            # Converte a data e a hora para um objeto datetime
+            horario_inicio_novo = datetime.combine(data, hora)
+            horario_fim_novo = horario_inicio_novo + timedelta(minutes=duracao)
+            
+            # Filtra por agendamentos existentes na mesma data
+            agendamentos_existentes = Agendamento.objects.filter(data_agendamento=data)
+
+            # Para cada agendamento existente, verifica a sobreposição
+            for agendamento_existente in agendamentos_existentes:
+                duracao_existente = agendamento_existente.id_servicos.duracao_minutos
+                horario_inicio_existente = datetime.combine(agendamento_existente.data_agendamento, agendamento_existente.hora_agendamento)
+                horario_fim_existente = horario_inicio_existente + timedelta(minutes=duracao_existente)
+                
+                # Lógica de sobreposição
+                if not (horario_fim_novo <= horario_inicio_existente or horario_inicio_novo >= horario_fim_existente):
+                    raise forms.ValidationError('Este horário se sobrepõe a um agendamento existente. Por favor, escolha outro horário.')
+        
+        return cleaned_data
+
 
 # Crie um novo formulário de registro
 class CadastroForm(UserCreationForm):

@@ -13,7 +13,9 @@ urlpatterns = [
     path('vacina/cadastrar/', views.cadastrar_vacina, name='cadastrar_vacina'),
     path('consulta/cadastrar', views.cadastrar_consulta, name='cadastrar_consulta'),
     path('aplicacao_vacina/cadastrar', views.cadastrar_aplicacao_vacina, name='cadastrar_aplicacao_vacina'),
-    path('agendamento/cadastrar', views.cadastrar_agendamento, name='cadastrar_agendamento'),
+
+    path('cadastrar_agendamento', views.cadastrar_agendamento, name='cadastrar_agendamento'),
+    
     path('tratamento_realizado/cadastrar', views.cadastrar_tratamento_realizado, name='cadastrar_tratamento_realizado'),
 
     path('clientes/', views.listar_clientes, name='listar_clientes'),

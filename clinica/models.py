@@ -80,6 +80,7 @@ class RealizacaoTratamento(models.Model):
 
 class Servicos(models.Model):
     nome_servico = models.CharField("Nome do serviço", max_length=100)
+    duracao_minutos = models.IntegerField("Duração em minutos", default=60) # NOVO CAMPO
     
     def __str__(self):
         return self.nome_servico
