@@ -125,35 +125,43 @@ class AgendamentoForm(forms.ModelForm):
             'hora_agendamento': HiddenInput(),
         }
 
+     # --- MODIFICAÇÃO CRÍTICA NO MÉTODO clean() ---
     def clean(self):
         cleaned_data = super().clean()
-        data = cleaned_data.get('data_agendamento')
-        hora = cleaned_data.get('hora_agendamento')
+        data_agendamento = cleaned_data.get('data_agendamento')
+        hora_agendamento = cleaned_data.get('hora_agendamento')
         servico = cleaned_data.get('id_servicos')
-        
-        # Só valida se todos os campos necessários estão preenchidos
-        if data and hora and servico:
-            # Pega a duração do serviço do modelo
-            duracao = servico.duracao_minutos
-            
-            # Converte a data e a hora para um objeto datetime
-            horario_inicio_novo = datetime.combine(data, hora)
-            horario_fim_novo = horario_inicio_novo + timedelta(minutes=duracao)
-            
-            # Filtra por agendamentos existentes na mesma data
-            agendamentos_existentes = Agendamento.objects.filter(data_agendamento=data)
 
-            # Para cada agendamento existente, verifica a sobreposição
-            for agendamento_existente in agendamentos_existentes:
-                duracao_existente = agendamento_existente.id_servicos.duracao_minutos
-                horario_inicio_existente = datetime.combine(agendamento_existente.data_agendamento, agendamento_existente.hora_agendamento)
-                horario_fim_existente = horario_inicio_existente + timedelta(minutes=duracao_existente)
-                
-                # Lógica de sobreposição
-                if not (horario_fim_novo <= horario_inicio_existente or horario_inicio_novo >= horario_fim_existente):
-                    raise forms.ValidationError('Este horário se sobrepõe a um agendamento existente. Por favor, escolha outro horário.')
+        # Se os dados estiverem ausentes, o erro já será retornado por outros validadores
+        if not data_agendamento or not hora_agendamento or not servico:
+            return cleaned_data
+
+        duracao = servico.duracao_minutos
+        
+        # Constrói o intervalo de tempo do novo agendamento
+        data_hora_inicio = datetime.combine(data_agendamento, hora_agendamento)
+        data_hora_fim = data_hora_inicio + timedelta(minutes=duracao)
+
+        # Busca por agendamentos que se sobrepõem, MAS...
+        # ...EXCLUI O AGENDAMENTO ATUAL da busca se ele estiver sendo editado.
+        agendamentos_existentes = Agendamento.objects.filter(
+            data_agendamento=data_agendamento
+        ).exclude(id=self.instance.id) # <- ESSA É A LINHA QUE FAZ A DIFERENÇA
+
+        # Verifica se há sobreposição com outros agendamentos
+        for agendamento in agendamentos_existentes:
+            duracao_existente = agendamento.id_servicos.duracao_minutos
+            inicio_existente = datetime.combine(agendamento.data_agendamento, agendamento.hora_agendamento)
+            fim_existente = inicio_existente + timedelta(minutes=duracao_existente)
+            
+            # Checa se o novo agendamento se sobrepõe ao existente
+            if max(data_hora_inicio, inicio_existente) < min(data_hora_fim, fim_existente):
+                raise forms.ValidationError(
+                    "Este horário se sobrepõe a um agendamento existente. Por favor, escolha outro horário."
+                )
         
         return cleaned_data
+
 
 
 # Crie um novo formulário de registro
