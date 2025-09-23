@@ -266,20 +266,42 @@ def encontrar_proximo_horario_disponivel(data, duracao, agendamentos_existentes)
         
     return None
 
+# A função AGORA ACEITA DOIS NOVOS PARÂMETROS COM VALOR PADRÃO
 @login_required
-def cadastrar_agendamento(request):
+def cadastrar_agendamento(request, data=None, hora=None):
     titulo = 'Agendar Serviço'
+    
+    # 1. LÓGICA POST (SALVAR FORMULÁRIO) - Permanece a mesma
     if request.method == 'POST':
         form = AgendamentoForm(request.POST)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Serviço agendado com sucesso!')
-            return redirect('menu')
+            #messages.success(request, 'Serviço agendado com sucesso!')
+            # Retorna para o menu ou para a tela de agendamento rápido
+            return redirect('agendar_servico_rapido') 
         else:
             messages.error(request, 'Erro no formulário. Por favor, verifique os campos.')
+            
+    # 2. LÓGICA GET (EXIBIR FORMULÁRIO)
     else:
-        form = AgendamentoForm()
-    
+        initial_data = {}
+        
+        # Se a data e hora vieram da URL, pré-popula o formulário
+        if data and hora:
+            try:
+                data_obj = datetime.strptime(data, '%Y-%m-%d').date()
+                hora_obj = datetime.strptime(hora, '%H:%M').time()
+                
+                initial_data['data_agendamento'] = data_obj
+                initial_data['hora_agendamento'] = hora_obj
+                
+                messages.info(request, f"Preencha os detalhes para {data_obj.strftime('%d/%m/%Y')} às {hora_obj.strftime('%H:%M')}")
+                
+            except ValueError:
+                pass # Ignora se a URL vier mal formatada
+
+        form = AgendamentoForm(initial=initial_data)
+
     return render(request, 'cadastrar_agendamento.html', {'form': form, 'titulo': titulo})
 
 
@@ -468,88 +490,159 @@ def finalizar_servico(request, pk):
 def listar_agendamentos(request):
     data_inicio_str = request.GET.get('data_inicio')
     data_fim_str = request.GET.get('data_fim')
+    filtro_detalhes = request.GET.get('detalhes')
     
     try:
         if data_inicio_str and data_fim_str:
             data_inicio = datetime.strptime(data_inicio_str, '%Y-%m-%d').date()
             data_fim = datetime.strptime(data_fim_str, '%Y-%m-%d').date()
         else:
-            # Padrão: 7 dias antes e depois da data atual
             data_inicio = date.today() - timedelta(days=7)
             data_fim = date.today() + timedelta(days=7)
     except ValueError:
         data_inicio = date.today() - timedelta(days=7)
         data_fim = date.today() + timedelta(days=7)
 
-    # 1. Filtra agendamentos por um intervalo de datas
-    agendamentos = Agendamento.objects.filter(
+    # CORREÇÃO: Inicializa a queryset base, que sempre será usada.
+    agendamentos_qs = Agendamento.objects.filter(
         data_agendamento__gte=data_inicio,
         data_agendamento__lte=data_fim
-    ).order_by('data_agendamento', 'hora_agendamento')
+    ).select_related('id_servicos', 'id_animal').order_by('data_agendamento', 'hora_agendamento')
 
-    # 2. Gera a lista de agendamentos e horários livres
+    # APLICA A FILTRAGEM ADICIONAL SE HOUVER UM TERMO DE BUSCA.
+    if filtro_detalhes:
+        agendamentos_qs = agendamentos_qs.filter(
+            Q(id_animal__nome__icontains=filtro_detalhes) |
+            Q(id_servicos__nome_servico__icontains=filtro_detalhes) |
+            Q(observacoes__icontains=filtro_detalhes)
+        )
+
+    # Converte para lista somente APÓS todas as filtragens, para uso no loop.
+    agendamentos = list(agendamentos_qs)
+
+    # 2. Gera a lista de agendamentos e horários livres, agora com base na lista 'agendamentos'
     agendamentos_por_dia = {}
     delta_dias = data_fim - data_inicio
+    SLOT_MINUTOS = 60 
+    horario_limite = time(18, 0)
     
     for i in range(delta_dias.days + 1):
         dia_atual = data_inicio + timedelta(days=i)
-        
         horarios_do_dia = []
         agendamentos_do_dia = [a for a in agendamentos if a.data_agendamento == dia_atual]
+
+        # Mapeia os horários ocupados com base na duração do serviço.
+        horarios_ocupados = {}
+        for agendamento_atual in agendamentos_do_dia:
+            duracao = agendamento_atual.id_servicos.duracao_minutos
+            inicio_dt = datetime.combine(dia_atual, agendamento_atual.hora_agendamento)
+            fim_dt = inicio_dt + timedelta(minutes=duracao)
+            
+            current_slot_dt = inicio_dt
+            while current_slot_dt < fim_dt:
+                horarios_ocupados[current_slot_dt.time()] = agendamento_atual
+                current_slot_dt += timedelta(minutes=SLOT_MINUTOS)
+
+        horario_slot = time(8, 0)
         
-        horario_livre = time(8, 0)
-        horario_limite = time(18, 0)
-        
-        agendamento_idx = 0
-        
-        while horario_livre < horario_limite:
-            # Converte o tempo livre para datetime para comparação
-            horario_livre_dt = datetime.combine(dia_atual, horario_livre)
+        while horario_slot < horario_limite:
+            if horario_slot in horarios_ocupados:
+                agendamento_no_slot = horarios_ocupados[horario_slot]
+                horarios_do_dia.append({
+                    'tipo': 'agendado',
+                    'objeto': agendamento_no_slot
+                })
+            else:
+                horarios_do_dia.append({
+                    'tipo': 'livre',
+                    'hora': horario_slot
+                })
             
-            # Checa se o horário livre coincide com um agendamento
-            if agendamento_idx < len(agendamentos_do_dia):
-                agendamento_atual = agendamentos_do_dia[agendamento_idx]
-                
-                # Converte o horário do agendamento para datetime
-                horario_agendado_dt = datetime.combine(dia_atual, agendamento_atual.hora_agendamento)
-                
-                if horario_livre_dt == horario_agendado_dt:
-                    # Se o horário atual é um agendamento, adiciona-o à lista
-                    horarios_do_dia.append({
-                        'tipo': 'agendado',
-                        'objeto': agendamento_atual
-                    })
-                    
-                    # Avança o contador de agendamentos
-                    agendamento_idx += 1
-                    
-                    # Atualiza o próximo horário livre para depois do agendamento
-                    duracao = agendamento_atual.id_servicos.duracao_minutos
-                    horario_livre_dt += timedelta(minutes=duracao)
-                    horario_livre = horario_livre_dt.time()
-                    
-                    continue # Reinicia o loop com o novo horário
-            
-            # Adiciona o horário como livre se não foi agendado
-            horarios_do_dia.append({
-                'tipo': 'livre',
-                'hora': horario_livre
-            })
-            
-            # Avança para o próximo horário livre (ex: 30 minutos)
-            horario_livre_dt += timedelta(minutes=30)
-            horario_livre = horario_livre_dt.time()
-            
+            horario_slot_dt = datetime.combine(dia_atual, horario_slot) + timedelta(minutes=SLOT_MINUTOS)
+            horario_slot = horario_slot_dt.time()
+
         agendamentos_por_dia[dia_atual] = horarios_do_dia
     
     context = {
         'agendamentos_por_dia': agendamentos_por_dia,
         'data_inicio': data_inicio,
         'data_fim': data_fim,
+        'filtro_detalhes': filtro_detalhes,
     }
     return render(request, 'listar_agendamentos.html', context)
 
+def agendar_servico_rapido(request):
+    # ... (Lógica de data_selecionada permanece a mesma) ...
+    data_str = request.GET.get('data')
+    try:
+        if data_str:
+            data_selecionada = datetime.strptime(data_str, '%Y-%m-%d').date()
+        else:
+            data_selecionada = date.today()
+    except ValueError:
+        data_selecionada = date.today()
 
+    agendamentos = Agendamento.objects.filter(
+        data_agendamento=data_selecionada
+    ).select_related('id_servicos').order_by('hora_agendamento') # Use select_related para a duração do serviço
+
+    # Prepara um mapa de horários ocupados
+    horarios_ocupados = {}
+
+    # Marca todos os slots ocupados (início + duração)
+    for agendamento_atual in agendamentos:
+        # Pega a duração em minutos do serviço (Assumindo que 'duracao_minutos' existe no modelo Servicos)
+        # Se 'duracao_minutos' não existe, use um campo que armazene a duração
+        duracao = agendamento_atual.id_servicos.duracao_minutos # Mude para o nome do campo correto
+        
+        inicio_dt = datetime.combine(data_selecionada, agendamento_atual.hora_agendamento)
+        
+        # O agendamento ocupa o horário de início e todos os slots de duração
+        fim_dt = inicio_dt + timedelta(minutes=duracao)
+        
+        # Marca cada slot de 60 minutos (ou o slot de início) dentro do agendamento como ocupado
+        # Vamos marcar o horário de INÍCIO de cada slot que está dentro do agendamento
+        current_slot_dt = inicio_dt
+        while current_slot_dt < fim_dt:
+             # Armazena o objeto para exibir os detalhes do agendamento
+            horarios_ocupados[current_slot_dt.time()] = agendamento_atual
+            current_slot_dt += timedelta(minutes=60) # Avança de 60 em 60 minutos
+    
+    
+    # 2. Gera a lista de agendamentos e horários livres
+    horarios_do_dia = []
+    
+    SLOT_MINUTOS = 60 
+
+    horario_slot = time(8, 0)
+    horario_limite = time(18, 0)
+    
+    # Loop para gerar a grade de horários
+    while horario_slot < horario_limite:
+        
+        if horario_slot in horarios_ocupados:
+            # O slot está ocupado por um agendamento (início ou durante a execução)
+            agendamento_no_slot = horarios_ocupados[horario_slot]
+            horarios_do_dia.append({
+                'tipo': 'agendado',
+                'objeto': agendamento_no_slot
+            })
+        else:
+            # O slot está livre
+            horarios_do_dia.append({
+                'tipo': 'livre',
+                'hora': horario_slot
+            })
+        
+        # Avança para o próximo slot de 60 minutos
+        horario_slot_dt = datetime.combine(data_selecionada, horario_slot) + timedelta(minutes=SLOT_MINUTOS)
+        horario_slot = horario_slot_dt.time()
+
+    context = {
+        'horarios_do_dia': horarios_do_dia,
+        'data_selecionada': data_selecionada,
+    }
+    return render(request, 'agendar_servico.html', context)
 
 
 

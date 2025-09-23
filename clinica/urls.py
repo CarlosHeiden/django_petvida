@@ -14,7 +14,7 @@ urlpatterns = [
     path('consulta/cadastrar', views.cadastrar_consulta, name='cadastrar_consulta'),
     path('aplicacao_vacina/cadastrar', views.cadastrar_aplicacao_vacina, name='cadastrar_aplicacao_vacina'),
 
-    path('cadastrar_agendamento', views.cadastrar_agendamento, name='cadastrar_agendamento'),
+    #path('cadastrar_agendamento', views.cadastrar_agendamento, name='cadastrar_agendamento'),
     
     path('tratamento_realizado/cadastrar', views.cadastrar_tratamento_realizado, name='cadastrar_tratamento_realizado'),
 
@@ -30,10 +30,19 @@ urlpatterns = [
     path('listar-agendamentos/', views.listar_agendamentos, name='listar_agendamentos'),
 
 
+
     path('clientes/editar/<int:pk>/', views.editar_cliente, name='editar_cliente'),
     path('clientes/excluir/<int:pk>/', views.excluir_cliente, name='excluir_cliente'),
 
     path('register/', views.register, name='register'),
-    path('logout/', views.custom_logout, name='custom_logout')
+    path('logout/', views.custom_logout, name='custom_logout'),
+
+    # 1. NOVA ROTA para a tela de disponibilidade
+    path('agendar_servico/', views.agendar_servico_rapido, name='agendar_servico_rapido'),
+    
+    # 2. Rota que processa o FORMULÁRIO (aceita parâmetros para pré-preenchimento)
+    path('cadastrar_agendamento/', views.cadastrar_agendamento, name='cadastrar_agendamento'),
+    path('cadastrar_agendamento/<str:data>/<str:hora>/', views.cadastrar_agendamento, name='cadastrar_agendamento'),
+
 
 ]

@@ -9,14 +9,18 @@
     <h2 class="mb-4">Agendamentos e Horários Livres</h2>
 
     <form method="get" class="mb-4">
-        <div class="row">
-            <div class="col-md-5">
+        <div class="row g-3">
+            <div class="col-md-3">
                 <label for="id_data_inicio" class="form-label">Data de Início:</label>
                 <input type="date" class="form-control" id="id_data_inicio" name="data_inicio" value="{{ data_inicio|date:'Y-m-d' }}">
             </div>
-            <div class="col-md-5">
+            <div class="col-md-3">
                 <label for="id_data_fim" class="form-label">Data de Fim:</label>
                 <input type="date" class="form-control" id="id_data_fim" name="data_fim" value="{{ data_fim|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="id_detalhes" class="form-label">Filtrar Detalhes:</label>
+                <input type="text" class="form-control" id="id_detalhes" name="detalhes" placeholder="Animal, Serviço ou Obs" value="{{ filtro_detalhes|default:'' }}">
             </div>
             <div class="col-md-2 d-flex align-items-end">
                 <button type="submit" class="btn btn-primary w-100">Filtrar</button>
@@ -41,7 +45,7 @@
                     {% if horario.tipo == 'livre' %}
                     <tr class="table-success">
                         <td>{{ horario.hora|date:"H:i" }}</td>
-                        <td>Livre</td>
+                        <td>**Livre**</td>
                         <td></td>
                         <td></td>
                     </tr>
@@ -49,7 +53,9 @@
                     <tr class="table-danger">
                         <td>{{ horario.objeto.hora_agendamento|date:"H:i" }}</td>
                         <td>Agendado</td>
-                        <td>{{ horario.objeto.id_animal.nome }} - {{ horario.objeto.id_servicos.nome_servico }}</td>
+                        <td>
+                            {{ horario.objeto.id_animal.nome }} - {{ horario.objeto.id_servicos.nome_servico }}
+                        </td>
                         <td>{{ horario.objeto.observacoes|default_if_none:"" }}</td>
                     </tr>
                     {% endif %}

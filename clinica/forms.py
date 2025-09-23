@@ -1,12 +1,14 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from django.forms.widgets import HiddenInput
 from .models import (
     Cliente, Animal, Veterinario, Vacina,
     Consulta, AplicacaoVacina, Tratamento,
     RealizacaoTratamento, Agendamento
 )
 from datetime import datetime, timedelta
+
 
 
 
@@ -113,11 +115,14 @@ class AgendamentoForm(forms.ModelForm):
         model = Agendamento
         fields = ['id_animal', 'id_servicos', 'data_agendamento', 'hora_agendamento', 'observacoes']
         widgets = {
+            # CAMPOS VISÍVEIS: Têm que ter a classe de estilo aqui!
             'id_animal': forms.Select(attrs={'class': 'form-control'}),
             'id_servicos': forms.Select(attrs={'class': 'form-control'}),
-            'data_agendamento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'hora_agendamento': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
             'observacoes': forms.Textarea(attrs={'class': 'form-control'}),
+
+            # CAMPOS OCULTOS: Não precisam de classe de estilo
+            'data_agendamento': HiddenInput(), 
+            'hora_agendamento': HiddenInput(),
         }
 
     def clean(self):
