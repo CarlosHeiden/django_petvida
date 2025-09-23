@@ -644,6 +644,39 @@ def agendar_servico_rapido(request):
     }
     return render(request, 'agendar_servico.html', context)
 
+@login_required
+def editar_agendamento(request, id):
+    # Busca o agendamento pelo ID, ou retorna um erro 404 se não for encontrado
+    agendamento = get_object_or_404(Agendamento, pk=id)
+    titulo = "Editar Agendamento"
+    
+    # Lógica para salvar a edição (POST)
+    if request.method == 'POST':
+        form = AgendamentoForm(request.POST, instance=agendamento)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Agendamento atualizado com sucesso!')
+            return redirect('listar_agendamentos')
+        else:
+            messages.error(request, 'Erro ao atualizar o agendamento. Por favor, verifique os campos.')
+            
+    # Lógica para exibir o formulário pré-preenchido (GET)
+    else:
+        # Passa a instância do agendamento para o formulário
+        form = AgendamentoForm(instance=agendamento)
+    
+    return render(request, 'editar_agendamento.html', {'form': form, 'titulo': titulo, 'agendamento': agendamento})
 
 
+@login_required
+def excluir_agendamento(request, id):
+    # Encontra o agendamento pelo ID, ou retorna 404
+    agendamento = get_object_or_404(Agendamento, pk=id)
+
+    # Ação de exclusão.
+    agendamento.delete()
+    messages.success(request, f'O agendamento para {agendamento.id_animal.nome} foi excluído com sucesso.')
+    
+    # Após a exclusão, redireciona para a tela de listagem
+    return redirect('listar_agendamentos')
 

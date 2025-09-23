@@ -50,7 +50,10 @@
                         <td></td>
                     </tr>
                     {% else %}
-                    <tr class="table-danger">
+                    {% url 'editar_agendamento' id=horario.objeto.id as editar_url %}
+                    <tr class="table-danger clickable-row" 
+                        onclick="window.location='{{ editar_url }}'"
+                        style="cursor: pointer;">
                         <td>{{ horario.objeto.hora_agendamento|date:"H:i" }}</td>
                         <td>Agendado</td>
                         <td>

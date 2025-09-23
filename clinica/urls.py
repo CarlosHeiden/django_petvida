@@ -44,5 +44,8 @@ urlpatterns = [
     path('cadastrar_agendamento/', views.cadastrar_agendamento, name='cadastrar_agendamento'),
     path('cadastrar_agendamento/<str:data>/<str:hora>/', views.cadastrar_agendamento, name='cadastrar_agendamento'),
 
+    # NOVAS ROTAS PARA EDIÇÃO E EXCLUSÃO
+    path('agendamento/editar/<int:id>/', views.editar_agendamento, name='editar_agendamento'),
+    path('agendamento/excluir/<int:id>/', views.excluir_agendamento, name='excluir_agendamento'),
 
 ]
