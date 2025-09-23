@@ -8,7 +8,6 @@ from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, A
 from .forms import CadastroForm, ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
 from datetime import datetime, timedelta, time, date
 
-from .serializers import AgendamentoSerializer, AnimalSerializer, ServicosSerializer
 from rest_framework.decorators import api_view
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
@@ -16,6 +15,8 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+from .api.serializers import AgendamentoSerializer,AnimalSerializer, ServicosSerializer
 
 
 
@@ -395,7 +396,8 @@ class CustomAuthToken(ObtainAuthToken):
             )
 # ViewSet para Agendamentos (protegida com autenticação)
 class AgendamentoViewSet(viewsets.ModelViewSet):
-   # queryset = Agendamento.objects.all().order_by('-data_agendamento', '-hora_agendamento')
+    queryset = Agendamento.objects.all().order_by('-data_agendamento', '-hora_agendamento')
+    # Troque a classe do serializer para a que criamos
     serializer_class = AgendamentoSerializer
     permission_classes = [IsAuthenticated]
 
