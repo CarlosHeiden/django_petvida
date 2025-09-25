@@ -8,7 +8,7 @@ from .models import Cliente, Veterinario, Animal, Vacina, Consulta,Tratamento, A
 from .forms import CadastroForm, ClienteForm, AnimalForm, VeterinarioForm, VacinaForm,  AplicacaoVacinaForm, AgendamentoForm, ConsultaForm, RealizacaoTratamentoForm
 from datetime import datetime, timedelta, time, date
 
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authtoken.views import ObtainAuthToken
@@ -460,15 +460,6 @@ def agendamentos_do_dia(request):
     return render(request, 'agendamentos_do_dia.html', context)
 
 
-def get_agendamentos_json(request):
-    """
-    Retorna os agendamentos do dia em formato JSON para o JavaScript.
-    Não exige autenticação de token.
-    """
-    hoje = date.today()
-    agendamentos = Agendamento.objects.filter(data_agendamento=hoje).order_by('hora_agendamento')
-    serializer = AgendamentoSerializer(agendamentos, many=True)
-    return JsonResponse(serializer.data, safe=False)
 
 @api_view(['POST'])
 def finalizar_servico(request, pk):
@@ -682,3 +673,116 @@ def excluir_agendamento(request, id):
     # Após a exclusão, redireciona para a tela de listagem
     return redirect('listar_agendamentos')
 
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_horarios_disponiveis(request):
+    try:
+        data_param = request.query_params.get('data')
+        servico_id = request.query_params.get('servico_id')
+        
+        if not data_param or not servico_id:
+            return Response(
+                {"error": "Os parâmetros 'data' e 'servico_id' são obrigatórios."},
+                status=400
+            )
+
+        data_selecionada = datetime.strptime(data_param, '%Y-%m-%d').date()
+        servico = Servicos.objects.get(pk=servico_id)
+        # A duração do serviço ainda é importante para o bloqueio de horários
+        # duracao_servico = servico.duracao_minutos
+
+        horarios_disponiveis = []
+        hora_inicial_atendimento = time(9, 0)
+        hora_final_atendimento = time(18, 0)
+
+        # Buscar todos os agendamentos existentes para a data selecionada
+        agendamentos_do_dia = Agendamento.objects.filter(data_agendamento=data_selecionada).order_by('hora_agendamento')
+
+        # Criar uma lista de horários ocupados, considerando a duração do serviço
+        horarios_ocupados = []
+        for agendamento in agendamentos_do_dia:
+            inicio_ocupado = datetime.combine(data_selecionada, agendamento.hora_agendamento)
+            duracao_ocupado = agendamento.id_servicos.duracao_minutos
+            
+            # Adicionar todos os slots de 15 minutos que o agendamento ocupa
+            temp_hora = inicio_ocupado
+            while temp_hora < inicio_ocupado + timedelta(minutes=duracao_ocupado):
+                horarios_ocupados.append(temp_hora.strftime('%H:%M'))
+                temp_hora += timedelta(minutes=15)
+
+        # Gerar horários para o dia e verificar a disponibilidade
+        horario_atual = datetime.combine(data_selecionada, hora_inicial_atendimento)
+        while horario_atual.time() < hora_final_atendimento:
+            formato_hora = horario_atual.strftime('%H:%M')
+            
+            # Checar se o slot de 60 minutos está livre
+            is_disponivel = True
+            for i in range(4): # Verifica 4 blocos de 15 minutos para cobrir o slot de 60
+                slot_a_checar = (horario_atual + timedelta(minutes=15 * i)).strftime('%H:%M')
+                if slot_a_checar in horarios_ocupados:
+                    is_disponivel = False
+                    break
+            
+            if is_disponivel:
+                horarios_disponiveis.append(formato_hora)
+            
+            # AQUI ESTÁ A MUDANÇA: incrementar em 60 minutos
+            horario_atual += timedelta(minutes=60)
+
+        return Response(horarios_disponiveis, status=200)
+
+    except Servicos.DoesNotExist:
+        return Response({"error": "Serviço não encontrado."}, status=404)
+    except Exception as e:
+        return Response({"error": str(e)}, status=500)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def agendar_servico(request):
+    try:
+        id_servico = request.data.get('id_servico')
+        id_animal = request.data.get('id_animal')
+        data = request.data.get('data')
+        hora = request.data.get('hora')
+
+        if not all([id_servico, id_animal, data, hora]):
+            return Response(
+                {"detail": "Dados incompletos. 'id_servico', 'id_animal', 'data' e 'hora' são obrigatórios."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        servico = Servicos.objects.get(pk=id_servico)
+        animal = Animal.objects.get(pk=id_animal)
+
+        # AQUI ESTÁ A ÚNICA CORREÇÃO:
+        # A view não tenta mais obter o 'cliente' do usuário.
+        # A criação do agendamento não inclui o argumento 'cliente'.
+        Agendamento.objects.create(
+            data_agendamento=data,
+            hora_agendamento=hora,
+            id_animal=animal,
+            id_servicos=servico
+        )
+
+        return Response(
+            {"detail": "Agendamento criado com sucesso!"},
+            status=status.HTTP_201_CREATED
+        )
+
+    except Servicos.DoesNotExist:
+        return Response(
+            {"detail": f"Serviço com ID {id_servico} não encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Animal.DoesNotExist:
+        return Response(
+            {"detail": f"Animal com ID {id_animal} não encontrado."},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {"detail": f"Ocorreu um erro interno do servidor: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
