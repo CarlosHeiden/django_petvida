@@ -1,0 +1,43 @@
+# Ambiente virtual gerenciado pelo Poetry
+.env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+# Configurações do VS Code
+.vscode/
+
+# Arquivos de log
+*.log
+
+# Arquivos temporários do sistema
+.DS_Store
+Thumbs.db
+
+# Pasta de migrações sem arquivos (opcional)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# Arquivos de banco de dados
+db.sqlite3
+
+# Arquivos de cache e compilados
+*.pyc
+*.pyo
+*.pyd
+*.swp
+
+# Arquivos do Poetry (opcional manter .lock)
+poetry.lock
+
+# arquivo texto
+.codigos.txt
+
+*.json
+
+Credenciais do Firebase/Google Cloud (Adicionado para Push Protection)
+petvida/petvida-app-firebase-adminsdk-fbsvc-bec6d16216.json
+petvida/petvida-app-firebase-adminsdk-fbsvc-a7920e3362.json
+petvida/firebase_key.json

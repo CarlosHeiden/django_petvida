@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .menu-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+    .menu-title {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    .menu-item {
+        margin-bottom: 10px;
+        font-weight: 500;
+        transition: background 0.2s ease-in-out;
+    }
+    .menu-item:hover {
+        background-color: #e9ecef;
+    }
+    .menu-icon {
+        margin-right: 8px;
+    }
+</style>
+
+<div class="container menu-container mt-5">
+    <h2 class="menu-title">Menu Principal</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="list-group">
+                <a href="{% url 'cadastrar_cliente' %}" class="list-group-item list-group-item-action menu-item">
+                    👤 Cadastrar Cliente
+                </a>
+                <a href="{% url 'cadastrar_animal' %}" class="list-group-item list-group-item-action menu-item">
+                    🐾 Cadastrar Animal
+                </a>
+                <a href="{% url 'cadastrar_veterinario' %}" class="list-group-item list-group-item-action menu-item">
+                    🩺 Cadastrar Veterinário
+                </a>
+                <a href="{% url 'cadastrar_vacina' %}" class="list-group-item list-group-item-action menu-item">
+                    💉 Cadastrar Vacina
+                </a>
+                <a href="{% url 'cadastrar_consulta' %}" class="list-group-item list-group-item-action menu-item">
+                    📅 Cadastrar Consulta
+                </a>
+                <a href="{% url 'agendar_servico_rapido' %}" class="list-group-item list-group-item-action menu-item">
+                    ⏰ Agendar Serviços (Banho, Tosa)
+                </a>
+                <a href="{% url 'listar_agendamentos' %}" class="list-group-item list-group-item-action menu-item">
+                    📅 Visualizar Agendamentos
+                </a>
+                <a href="{% url 'agendamentos_do_dia' %}" class="list-group-item list-group-item-action menu-item">
+                    ✅ Agendamentos do Dia
+                </a>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="list-group">
+                <a href="{% url 'cadastrar_aplicacao_vacina' %}" class="list-group-item list-group-item-action menu-item">
+                    🐶 Aplicar Vacina
+                </a>
+                <a href="{% url 'cadastrar_tratamento_realizado' %}" class="list-group-item list-group-item-action menu-item">
+                    💊 Registrar Tratamento
+                </a>
+                <a href="{% url 'listar_clientes' %}" class="list-group-item list-group-item-action menu-item">
+                    📋 Listar Clientes
+                </a>
+                <a href="{% url 'listar_animais' %}" class="list-group-item list-group-item-action menu-item">
+                    🐕 Listar Animais
+                </a>
+                <a href="{% url 'listar_veterinarios' %}" class="list-group-item list-group-item-action menu-item">
+                    👨‍⚕️ Listar Veterinários
+                </a>
+                <a href="{% url 'listar_vacinas' %}" class="list-group-item list-group-item-action menu-item">
+                    💉 Listar Vacinas
+                </a>
+                
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

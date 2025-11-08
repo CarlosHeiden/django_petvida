@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Bem-vindo{% endblock %}
+
+{% block content %}
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+    }
+    .welcome-container {
+        position: relative;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        background-image: url("{% static 'img/welcome_desktop.jpg' %}");
+        background-size: cover;
+        background-position: center;
+        color: #fff;
+    }
+    .welcome-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* Overlay escuro para melhorar a leitura do texto */
+    }
+    .welcome-content {
+        position: relative;
+        z-index: 2;
+        padding: 20px;
+    }
+    .welcome-message {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+    .welcome-instructions {
+        font-size: 1.25rem;
+        margin-bottom: 10px;
+    }
+    .welcome-salute {
+        font-size: 1.5rem;
+        font-style: italic;
+    }
+</style>
+
+<div class="welcome-container">
+    <div class="welcome-overlay"></div>
+    <div class="welcome-content">
+        <br>
+        <br>
+        <p class="welcome-instructions">Bem-vindo(a) ao programa de gestão PetVida. Para iniciar, clique em "Entrar" na parte superior da tela.</p>
+        <br>
+        <p class="welcome-salute">Bom trabalho.</p>
+    </div>
+</div>
+{% endblock %}

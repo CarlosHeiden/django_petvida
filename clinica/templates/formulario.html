@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">{{ titulo }}</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate autocomplete="off" id="form-agendamento">
+                {% csrf_token %}
+                {% for field in form %}
+                    {% if field.name == 'id_veterinario' %}
+                        <div class="mb-3" id="div-veterinario">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% elif field.name == 'tipo_servico' %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.errors %}
+                                <div class="text-danger small">{{ field.errors|striptags }}</div>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% endfor %}
+                
+                <button type="submit" class="btn btn-salvar">Salvar</button>
+                <a href="{% url 'menu' %}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const servicoField = document.getElementById('id_tipo_servico');
+        const veterinarioDiv = document.getElementById('div-veterinario');
+        const form = document.getElementById('form-agendamento');
+        
+        const servicosSemVet = ['Banho', 'Tosa', 'Banho e Tosa'];
+
+        function toggleVeterinarioField() {
+            const selectedService = servicoField.value;
+            if (servicosSemVet.includes(selectedService)) {
+                veterinarioDiv.style.display = 'none';
+            } else {
+                veterinarioDiv.style.display = 'block';
+            }
+        }
+        
+        // Esconde o campo inicialmente, se necessário
+        toggleVeterinarioField();
+        
+        // Adiciona um listener para quando o usuário mudar a opção de serviço
+        servicoField.addEventListener('change', toggleVeterinarioField);
+
+        // --- NOVO CÓDIGO AQUI ---
+        // Se houver uma mensagem de sucesso, reseta o formulário
+        const successMessage = document.querySelector('.alert-success');
+        if (successMessage) {
+            form.reset();
+        }
+        // --- FIM DO NOVO CÓDIGO ---
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Sessão Encerrada{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card p-4 shadow-sm">
+                <h2 class="card-title mb-4">Sessão Encerrada</h2>
+                <p class="card-text">Você foi desconectado com sucesso.</p>
+                <p class="card-text">Obrigado por usar a Clínica PetVida!</p>
+                <a href="{% url 'login' %}" class="btn btn-primary mt-3">Fazer login novamente</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Define a URL para onde o usuário será redirecionado
+    const url_redirecionamento = "{% url 'pagina_inicial' %}";
+    
+    // Define o tempo de espera em milissegundos (5 segundos)
+    const tempo_espera = 3000;
+
+    // Redireciona o usuário após o tempo de espera
+    setTimeout(function() {
+        window.location.href = url_redirecionamento;
+    }, tempo_espera);
+</script>
+{% endblock %}

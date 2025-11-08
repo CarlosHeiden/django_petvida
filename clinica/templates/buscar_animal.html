@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Buscar Animal - Histórico Clínico</h2>
+
+{% if animais %}
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Nome</th>
+            <th>Espécie</th>
+            <th>Raça</th>
+            <th>Tutor</th>
+            <th>Ações</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for animal in animais %}
+        <tr>
+            <td>{{ animal.nome }}</td>
+            <td>{{ animal.especie }}</td>
+            <td>{{ animal.raca }}</td>
+            <td>{{ animal.id_cliente.nome_completo }}</td>
+            <td>
+                <a href="{% url 'historico_clinico' animal.id_animal %}" class="btn btn-primary btn-sm">Ver Histórico</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Nenhum animal encontrado.</p>
+{% endif %}
+
+{% endblock %}

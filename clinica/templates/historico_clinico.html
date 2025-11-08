@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Histórico Clínico{% endblock %}
+
+{% block content %}
+  <div class="container mt-4">
+    <h2 class="mb-3">Histórico Clínico de {{ animal.nome }}</h2>
+    <p><strong>Tutor:</strong> {{ tutor.nome_completo }}</p>
+
+    {% if historico %}
+      <table class="table table-bordered table-striped mt-3">
+        <thead class="table-dark">
+          <tr>
+            <th>Data</th>
+            <th>Tipo</th>
+            <th>Descrição</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in historico %}
+            <tr>
+              <td>{{ item.data|date:"d/m/Y" }}</td>
+              <td>{{ item.tipo }}</td>
+              <td>{{ item.descricao }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted mt-3">Nenhum histórico encontrado para este animal.</p>
+    {% endif %}
+
+    <a href="{% url 'menu' %}" class="btn btn-secondary mt-3">Voltar ao Menu</a>
+  </div>
+{% endblock %}

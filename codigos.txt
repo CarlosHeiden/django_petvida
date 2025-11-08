@@ -1,0 +1,59 @@
+//  index.html primeiro teste
+
+{% extends 'base.html' %}
+{% load static %} 
+
+
+{% block title %}Página Inicial{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div id="carouselExampleIndicators" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-indicators">
+            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="1" aria-label="Slide 2"></button>
+            <button type="button" data-bs-target="#carouselExampleIndicators" data-bs-slide-to="2" aria-label="Slide 3"></button>
+        </div>
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="{% static 'img/matilha_feliz.jpg' %}" class="d-block w-100" alt="Imagem de um animal de estimação">
+            </div>
+            <div class="carousel-item">
+                <img src="{% static 'img/pastor_correndo.jpg' %}" class="d-block w-100" alt="Equipe de veterinários">
+            </div>
+            <div class="carousel-item">
+                <img src="{% static 'img/pastor_filhote.jpeg' %}" class="d-block w-100" alt="Animais felizes">
+            </div>
+        </div>
+        
+    </div>
+
+    <h2 class="text-center mt-5 mb-4">Nossos Serviços</h2>
+    <div class="row text-center">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Consultas</h5>
+                    <p class="card-text">Oferecemos consultas de rotina e de emergência para manter a saúde do seu pet em dia.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Banho e Tosa</h5>
+                    <p class="card-text">Serviços de higiene para deixar seu melhor amigo sempre limpo e cheiroso.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Vacinação</h5>
+                    <p class="card-text">Protocolos de vacinação completos para proteger seu pet contra doenças.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

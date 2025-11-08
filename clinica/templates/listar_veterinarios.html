@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h2>Lista de Veterinários</h2>
+<br/>
+<form method="get">
+    <input type="text" name="q" placeholder="Buscar veterinário..." value="{{ request.GET.q }}">
+    <button type="submit">Buscar</button>
+</form>
+
+<br/>
+<br/>
+
+{% if veterinarios %}
+<table class="table table-striped table-bordered table-hover">
+    <thead class="table-dark">
+      <tr>
+        <th>Nome</th>
+        <th>CRMV</th>
+        <th>Especialidade</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for vet in veterinarios %}
+      <tr>
+        <td>{{ vet.nome }}</td>
+        <td>{{ vet.crmv }}</td>
+        <td>{{ vet.especialidade }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+</table>
+  {% else %}
+<p>Nenhum veterinário cadastrado.</p>
+{% endif %}
+
+<a href="{% url 'menu' %}" class="btn btn-secondary">Voltar Menu</a>
+
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Agendar Serviço por Horário
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Agendar Serviço (Banho, Tosa)</h2>
+    <h4 class="mb-4">Disponibilidade para: {{ data_selecionada|date:"d/m/Y" }}</h4>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <label for="calendario" class="form-label">Mudar Data:</label>
+            <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-calendar-date"></i></span>
+                <input type="text" class="form-control" id="calendario" placeholder="Selecione uma data">
+            </div>
+        </div>
+    </div>
+    
+    <table class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th scope="col">Horário</th>
+                <th scope="col">Status</th>
+                <th scope="col">Detalhes do Agendamento</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for horario in horarios_do_dia %}
+                {% if horario.tipo == 'livre' %}
+                {% comment %}
+                    Gera a URL que leva ao formulário, passando a data e hora.
+                    O nome da URL será a rota de cadastro que vamos ajustar.
+                {% endcomment %}
+                {% url 'cadastrar_agendamento' data=data_selecionada|date:"Y-m-d" hora=horario.hora|date:"H:i" as agendamento_url %}
+
+                <tr class="table-success clickable-row" 
+                    onclick="window.location='{{ agendamento_url }}'"
+                    style="cursor: pointer;">
+                    
+                    <td>{{ horario.hora|date:"H:i" }}</td>
+                    <td>**Livre** - Clique para Agendar</td>
+                    <td></td>
+                </tr>
+                {% else %}
+                <tr class="table-danger">
+                    <td>{{ horario.objeto.hora_agendamento|date:"H:i" }}</td>
+                    <td>Agendado</td>
+                    <td>
+                        {{ horario.objeto.id_animal.nome }} - {{ horario.objeto.id_servicos.nome_servico }}
+                    </td>
+                </tr>
+                {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            flatpickr("#calendario", {
+                dateFormat: "Y-m-d",
+                defaultDate: "{{ data_selecionada|date:'Y-m-d' }}",
+                // Quando o usuário seleciona uma data, redireciona para a própria view com o novo parâmetro
+                onChange: function(selectedDates, dateStr, instance) {
+                    window.location.href = `{% url 'agendar_servico_rapido' %}?data=${dateStr}`;
+                }
+            });
+        });
+    </script>
+</div>
+{% endblock %}

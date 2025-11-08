@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">{{ titulo }}</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" novalidate autocomplete="off" id="form-agendamento">
+    {% csrf_token %}
+    {% for field in form %}
+    {% comment %}
+        Verifica se o campo é oculto (data_agendamento ou hora_agendamento)
+        Se for oculto, renderiza para que os dados sejam enviados no POST.
+    {% endcomment %}
+    {% if field.is_hidden %}
+        {{ field }}
+    {% else %}
+        <div class="mb-3">
+            <label class="form-label">{{ field.label }}</label>
+            
+            {% comment %} 
+                Renderização simplificada. Aplicaremos a classe 'form-control' no forms.py
+            {% endcomment %}
+            {{ field }}
+            
+            {% if field.errors %}
+                <div class="text-danger small">{{ field.errors|striptags }}</div>
+            {% endif %}
+        </div>
+    {% endif %}
+{% endfor %}
+{# NOVO: Exibe Erros Não-Relacionados a Campos Específicos #}
+{% if form.non_field_errors %}
+    <div class="alert alert-danger mt-3">
+        **Erro de Validação Geral:** {{ form.non_field_errors }}
+    </div>
+{% endif %}
+
+{% comment %} 
+    Exibe uma confirmação visual da data/hora
+{% endcomment %}
+{% if form.initial.data_agendamento %}
+<div class="alert alert-info mt-3">
+    Agendando para: <strong>{{ form.initial.data_agendamento|date:"d/m/Y" }}</strong> às <strong>{{ form.initial.hora_agendamento|date:"H:i" }}</strong>
+</div>
+{% endif %}
+                
+                <button type="submit" class="btn btn-salvar">Salvar</button>
+                <a href="{% url 'cadastrar_agendamento' %}" class="btn btn-secondary">Cancelar</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
