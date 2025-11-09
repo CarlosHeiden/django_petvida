@@ -163,6 +163,34 @@
             }
             return cookieValue;
         }
+        // ========================
+        //  ATUALIZAÇÃO AUTOMÁTICA
+        // ========================
+        async function atualizarAgendamentos() {
+            try {
+                const response = await fetch(window.location.href, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" }
+                });
+
+                if (!response.ok) throw new Error("Erro ao buscar agendamentos.");
+
+                const html = await response.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+
+                const novaLista = doc.querySelector("#agendamentos-list");
+                if (novaLista) {
+                    document.querySelector("#agendamentos-list").innerHTML = novaLista.innerHTML;
+                }
+
+                console.log("✅ Lista de agendamentos atualizada automaticamente");
+            } catch (error) {
+                console.error("❌ Falha ao atualizar agendamentos:", error);
+            }
+        }
+
+        // Atualiza automaticamente a cada 60 segundos
+        setInterval(atualizarAgendamentos, 15000);
     </script>
 </body>
 </html>
