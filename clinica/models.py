@@ -1,18 +1,17 @@
+# models.py (trecho substituto para a model Cliente + signal)
 from django.db import models
 from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db import IntegrityError
 
-# Adicione o OneToOneField para ligar o Cliente ao User do Django
 class Cliente(models.Model):
-    # RELAÇÃO OBRIGATÓRIA: Liga o Cliente ao User nativo do Django
-    user = models.OneToOneField(User, on_delete=models.CASCADE, verbose_name="Usuário")
-    
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     nome_completo = models.CharField("Nome completo", max_length=100)
-    cpf = models.CharField("CPF", max_length=14, unique=True)
-    telefone = models.CharField("Telefone", max_length=20)
-    email = models.EmailField("Email", blank=True, null=True)
-    endereco = models.CharField("Endereço", max_length=255)
-
-    # NOVO CAMPO: Para armazenar o token do Firebase Cloud Messaging
+    telefone = models.CharField(max_length=30, blank=True, null=True)
+    email = models.EmailField(blank=True, null=True)
+    endereco = models.CharField(max_length=200, blank=True, null=True)
+    cpf = models.CharField(max_length=20, unique=True)
     fcm_token = models.CharField(
         max_length=255, 
         null=True, 
@@ -22,6 +21,61 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f"{self.nome_completo} ({self.cpf})"
+
+@receiver(post_save, sender=Cliente)
+def criar_usuario_automatico(sender, instance: Cliente, created, **kwargs):
+    """
+    Ao criar um Cliente (created == True) e se não houver user vinculado,
+    cria automaticamente um User Django vinculado ao Cliente.
+
+    - Username: preferencialmente o email; se vazio, usa CPF.
+    - Senha: usa o telefone informado (por isso é necessário ajustar os validadores).
+    - Se username já existir, adiciona sufixo numérico (username, username_1, ...)
+    """
+    # Apenas quando o Cliente foi criado e não tem user associado
+    if not created or instance.user:
+        return
+
+    # Determinar username e password
+    base_username = (instance.email or instance.cpf or instance.nome_completo or "user").strip()
+    # Limpeza simples (remover espaços)
+    base_username = base_username.replace(" ", "_")
+    if base_username == "":
+        base_username = "user"
+
+    password = (instance.telefone or "").strip()
+    if password == "":
+        # fallback mínimo; ideal: não permitir criar sem telefone se for usada como senha
+        password = "petvida_default_pwd"
+
+    # Garante que username seja único
+    username = base_username
+    suffix = 0
+    while True:
+        if not User.objects.filter(username=username).exists():
+            break
+        suffix += 1
+        username = f"{base_username}_{suffix}"
+
+    try:
+        # Cria usuário — se você tiver desabilitado AUTH_PASSWORD_VALIDATORS em settings,
+        # isso não será barrado. Caso contrário, pode lançar ValidationError.
+        user = User.objects.create_user(username=username, email=(instance.email or ""), password=password)
+        # opcional: ajustar atributos do user
+        user.first_name = instance.nome_completo or ""
+        user.save(update_fields=["first_name"])
+
+        # vincula o user ao cliente e salva (update_fields evita set off many things)
+        instance.user = user
+        # salva apenas o campo user para evitar triggers desnecessários
+        instance.save(update_fields=["user"])
+
+        print(f"✅ Usuário criado automaticamente para Cliente(id={instance.pk}): username='{username}'")
+    except IntegrityError as ie:
+        print(f"❌ IntegrityError ao criar User para Cliente(id={instance.pk}): {ie}")
+    except Exception as e:
+        # Ex.: validação de senha, problemas inesperados
+        print(f"❌ Erro ao criar User automático para Cliente(id={instance.pk}): {e}")
 
 class Animal(models.Model):
     nome = models.CharField("Nome do animal", max_length=100)

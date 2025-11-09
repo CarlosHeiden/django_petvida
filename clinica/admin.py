@@ -1,11 +1,7 @@
 from django.contrib import admin
-
-from django.contrib import admin
-from .models import (
-    Cliente, Animal, Veterinario, Consulta,
-    Vacina, AplicacaoVacina, Tratamento,
-    RealizacaoTratamento, Agendamento, Servicos
-)
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from .models import Cliente, Animal, Servicos, Agendamento, Vacina, AplicacaoVacina, Tratamento, RealizacaoTratamento, Veterinario, Consulta
 
 admin.site.register(Cliente)
 admin.site.register(Animal)
