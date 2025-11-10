@@ -536,7 +536,7 @@ def listar_agendamentos(request):
     return render(request, 'listar_agendamentos.html', context)
 
 def agendar_servico_rapido(request):
-    # ... (Lógica de data_selecionada permanece a mesma) ...
+    # --- Lógica de data_selecionada permanece a mesma ---
     data_str = request.GET.get('data')
     try:
         if data_str:
@@ -548,65 +548,62 @@ def agendar_servico_rapido(request):
 
     agendamentos = Agendamento.objects.filter(
         data_agendamento=data_selecionada
-    ).select_related('id_servicos').order_by('hora_agendamento') # Use select_related para a duração do serviço
+    ).select_related('id_servicos').order_by('hora_agendamento')
 
     # Prepara um mapa de horários ocupados
     horarios_ocupados = {}
 
     # Marca todos os slots ocupados (início + duração)
     for agendamento_atual in agendamentos:
-        # Pega a duração em minutos do serviço (Assumindo que 'duracao_minutos' existe no modelo Servicos)
-        # Se 'duracao_minutos' não existe, use um campo que armazene a duração
-        duracao = agendamento_atual.id_servicos.duracao_minutos # Mude para o nome do campo correto
-        
+        duracao = agendamento_atual.id_servicos.duracao_minutos
         inicio_dt = datetime.combine(data_selecionada, agendamento_atual.hora_agendamento)
-        
-        # O agendamento ocupa o horário de início e todos os slots de duração
         fim_dt = inicio_dt + timedelta(minutes=duracao)
-        
-        # Marca cada slot de 60 minutos (ou o slot de início) dentro do agendamento como ocupado
-        # Vamos marcar o horário de INÍCIO de cada slot que está dentro do agendamento
+
         current_slot_dt = inicio_dt
         while current_slot_dt < fim_dt:
-             # Armazena o objeto para exibir os detalhes do agendamento
             horarios_ocupados[current_slot_dt.time()] = agendamento_atual
-            current_slot_dt += timedelta(minutes=60) # Avança de 60 em 60 minutos
-    
-    
-    # 2. Gera a lista de agendamentos e horários livres
+            current_slot_dt += timedelta(minutes=60)
+
+    # 2️⃣ Gera a lista de agendamentos e horários livres
     horarios_do_dia = []
-    
-    SLOT_MINUTOS = 60 
+    SLOT_MINUTOS = 60
 
     horario_slot = time(8, 0)
     horario_limite = time(18, 0)
-    
-    # Loop para gerar a grade de horários
+
     while horario_slot < horario_limite:
-        
         if horario_slot in horarios_ocupados:
-            # O slot está ocupado por um agendamento (início ou durante a execução)
             agendamento_no_slot = horarios_ocupados[horario_slot]
             horarios_do_dia.append({
                 'tipo': 'agendado',
                 'objeto': agendamento_no_slot
             })
         else:
-            # O slot está livre
             horarios_do_dia.append({
                 'tipo': 'livre',
                 'hora': horario_slot
             })
-        
-        # Avança para o próximo slot de 60 minutos
+
         horario_slot_dt = datetime.combine(data_selecionada, horario_slot) + timedelta(minutes=SLOT_MINUTOS)
         horario_slot = horario_slot_dt.time()
+
+    # ==========================================================
+    # ✅ NOVO BLOCO — Remove horários passados no dia atual
+    # ==========================================================
+    if data_selecionada == datetime.now().date():
+        hora_agora = datetime.now().time()
+        horarios_do_dia = [
+            h for h in horarios_do_dia
+            if not (h['tipo'] == 'livre' and h['hora'] <= hora_agora)
+        ]
+        print(f"⏰ Filtrando horários do dia atual, agora {hora_agora}")
 
     context = {
         'horarios_do_dia': horarios_do_dia,
         'data_selecionada': data_selecionada,
     }
     return render(request, 'agendar_servico.html', context)
+
 
 @login_required
 def editar_agendamento(request, id):
@@ -660,8 +657,6 @@ def get_horarios_disponiveis(request):
 
         data_selecionada = datetime.strptime(data_param, '%Y-%m-%d').date()
         servico = Servicos.objects.get(pk=servico_id)
-        # A duração do serviço ainda é importante para o bloqueio de horários
-        # duracao_servico = servico.duracao_minutos
 
         horarios_disponiveis = []
         hora_inicial_atendimento = time(9, 0)
@@ -670,13 +665,12 @@ def get_horarios_disponiveis(request):
         # Buscar todos os agendamentos existentes para a data selecionada
         agendamentos_do_dia = Agendamento.objects.filter(data_agendamento=data_selecionada).order_by('hora_agendamento')
 
-        # Criar uma lista de horários ocupados, considerando a duração do serviço
+        # Criar uma lista de horários ocupados
         horarios_ocupados = []
         for agendamento in agendamentos_do_dia:
             inicio_ocupado = datetime.combine(data_selecionada, agendamento.hora_agendamento)
             duracao_ocupado = agendamento.id_servicos.duracao_minutos
             
-            # Adicionar todos os slots de 15 minutos que o agendamento ocupa
             temp_hora = inicio_ocupado
             while temp_hora < inicio_ocupado + timedelta(minutes=duracao_ocupado):
                 horarios_ocupados.append(temp_hora.strftime('%H:%M'))
@@ -689,7 +683,7 @@ def get_horarios_disponiveis(request):
             
             # Checar se o slot de 60 minutos está livre
             is_disponivel = True
-            for i in range(4): # Verifica 4 blocos de 15 minutos para cobrir o slot de 60
+            for i in range(4):  # Verifica 4 blocos de 15 minutos
                 slot_a_checar = (horario_atual + timedelta(minutes=15 * i)).strftime('%H:%M')
                 if slot_a_checar in horarios_ocupados:
                     is_disponivel = False
@@ -698,8 +692,18 @@ def get_horarios_disponiveis(request):
             if is_disponivel:
                 horarios_disponiveis.append(formato_hora)
             
-            # AQUI ESTÁ A MUDANÇA: incrementar em 60 minutos
             horario_atual += timedelta(minutes=60)
+
+        # ==========================================================
+        # ✅ NOVO BLOCO INSERIDO — filtra horários passados do dia atual
+        # ==========================================================
+        if data_selecionada == datetime.now().date():
+            hora_agora = datetime.now().time()
+            horarios_disponiveis = [
+                h for h in horarios_disponiveis
+                if datetime.strptime(h, "%H:%M").time() > hora_agora
+            ]
+            print(f"⏰ Filtrando horários: agora {hora_agora}, válidos: {horarios_disponiveis}")
 
         return Response(horarios_disponiveis, status=200)
 
@@ -707,6 +711,7 @@ def get_horarios_disponiveis(request):
         return Response({"error": "Serviço não encontrado."}, status=404)
     except Exception as e:
         return Response({"error": str(e)}, status=500)
+
     
 
 @api_view(['POST'])
