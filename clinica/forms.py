@@ -36,18 +36,51 @@ class VeterinarioForm(forms.ModelForm):
         }
 
 class AnimalForm(forms.ModelForm):
+    ESPECIES_CHOICES = [
+        ('', 'Selecione a especie do animal'),  # valor vazio para ser o placeholder
+        ('Cachorro', 'Cachorro'),
+        ('Gato', 'Gato'),
+    ]
+
+    PORTE_CHOICES = [
+        ('', 'Selecione o porte'),  # placeholder
+        ('Pequeno', 'Pequeno'),
+        ('Médio', 'Médio'),
+        ('Grande', 'Grande'),
+    ]
+
+    especie = forms.ChoiceField(
+        choices=ESPECIES_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Espécie"
+    )
+
+    porte = forms.ChoiceField(
+        choices=PORTE_CHOICES,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label="Porte"
+    )
+
     class Meta:
         model = Animal
         fields = '__all__'
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'especie': forms.TextInput(attrs={'class': 'form-control'}),
             'raca': forms.TextInput(attrs={'class': 'form-control'}),
             'data_nascimento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
-            'porte': forms.TextInput(attrs={'class': 'form-control'}),
             'peso': forms.NumberInput(attrs={'class': 'form-control'}),
-            'id_cliente': forms.Select(attrs={'class': 'form-control'}),
+            'id_cliente': forms.Select(attrs={
+                'class': 'form-control',
+                'placeholder': 'Selecione o tutor'
+            }),
         }
+
+    # 🔧 Ajuste para o dropdown do tutor (cliente)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['id_cliente'].empty_label = "Selecione o tutor"
+
+
 
 class VacinaForm(forms.ModelForm):
     class Meta:
