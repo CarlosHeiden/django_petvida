@@ -2,7 +2,7 @@
 # 🐾 PetVida — Sistema de Gestão de Clínica Veterinária  
 
 ## 🧩 Visão Geral  
-O **PetVida** é um sistema  de gestão de sercocos para clínicas veterinárias e PetShops, desenvolvido em **Django (backend)** e integrado com um **aplicativo Flutter (frontend mobile)**.  
+O **PetVida** é um sistema  de gestão de serviços para clínicas veterinárias e PetShops, desenvolvido em **Django (backend)** e integrado com um **aplicativo Flutter (frontend mobile)**.  
 
 O sistema permite:  
 - Cadastrar clientes e seus animais.  
